@@ -1,16 +1,17 @@
 
 import React from 'react';
-import { Home, FileText, Image, Video, Settings, Plus, Search, Folder } from 'lucide-react';
+import { Home, FileText, Video, Settings, Plus, Search, Folder, Mic, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Sidebar = () => {
   const menuItems = [
-    { icon: Home, label: 'Dashboard', active: true },
-    { icon: Folder, label: 'Projects' },
-    { icon: FileText, label: 'Documents' },
-    { icon: Image, label: 'Images' },
-    { icon: Video, label: 'Videos' },
-    { icon: Settings, label: 'Settings' },
+    { icon: Home, label: 'Dashboard', active: true, href: '/' },
+    { icon: Folder, label: 'Projects', href: '/projects' },
+    { icon: FileText, label: 'Documents', href: '/documents' },
+    { icon: Mic, label: 'Transcription', href: '/transcription' },
+    { icon: Upload, label: 'Published Files', href: '/published' },
+    { icon: Video, label: 'Videos', href: '/videos' },
+    { icon: Settings, label: 'Settings', href: '/settings' },
   ];
 
   return (
@@ -46,12 +47,15 @@ const Sidebar = () => {
         <ul className="space-y-1">
           {menuItems.map((item, index) => (
             <li key={index}>
-              <button className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                item.active ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}>
+              <a
+                href={item.href}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  item.active ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
                 <item.icon className="w-5 h-5" />
                 <span className="text-sm font-medium">{item.label}</span>
-              </button>
+              </a>
             </li>
           ))}
         </ul>
