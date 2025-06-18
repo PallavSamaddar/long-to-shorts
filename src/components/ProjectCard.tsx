@@ -9,7 +9,7 @@ interface ProjectCardProps {
   collaborators: number;
   lastModified: string;
   progress: number;
-  image?: string;
+  image?: boolean;
 }
 
 const ProjectCard = ({ title, description, collaborators, lastModified, progress, image }: ProjectCardProps) => {
