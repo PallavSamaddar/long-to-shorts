@@ -1,11 +1,10 @@
-
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import GlobalHeader from '@/components/GlobalHeader';
 import StatsCard from '@/components/StatsCard';
 import ProjectCard from '@/components/ProjectCard';
 import RecentActivity from '@/components/RecentActivity';
-import { FileText, Image, Video, Users, Upload, Settings } from 'lucide-react';
+import { FileText, FileVideo, Video, Users, Upload, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -22,14 +21,14 @@ const Index = () => {
       value: '1,847',
       change: '+8%',
       trend: 'up' as const,
-      icon: <Image className="w-6 h-6" />
+      icon: <FileVideo className="w-6 h-6" />
     },
     {
       title: 'Unprocessed Files',
       value: '156',
       change: '+23%',
       trend: 'up' as const,
-      icon: <Users className="w-6 h-6" />
+      icon: <Clock className="w-6 h-6" />
     },
     {
       title: 'Videos Created',
@@ -125,7 +124,7 @@ const Index = () => {
                     Upload Slate
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
-                    <Image className="w-4 h-4 mr-2" />
+                    <FileVideo className="w-4 h-4 mr-2" />
                     Upload Logo
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
