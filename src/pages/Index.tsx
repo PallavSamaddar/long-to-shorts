@@ -113,26 +113,6 @@ const Index = () => {
             {/* Activity Sidebar */}
             <div className="lg:col-span-1">
               <RecentActivity />
-              
-              {/* Quick Actions */}
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mt-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h3>
-                
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Slate
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <FileVideo className="w-4 h-4 mr-2" />
-                    Upload Logo
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Publish Destination
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
         </main>

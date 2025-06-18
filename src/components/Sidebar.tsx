@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Home, FolderOpen, FileText, Globe, Settings, Search, Plus } from 'lucide-react';
+import { Home, FolderOpen, FileText, Globe, Settings, Search, Plus, Upload, FileVideo } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NewProjectDialog from '@/components/NewProjectDialog';
 
@@ -49,11 +49,30 @@ const Sidebar = () => {
           })}
         </nav>
 
-        {/* New Project Button */}
+        {/* Quick Actions */}
         <div className="p-4 border-t border-slate-200">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Quick Actions</h3>
+          
+          <div className="space-y-2 mb-4">
+            <Button variant="outline" size="sm" className="w-full justify-start text-xs">
+              <Upload className="w-3 h-3 mr-2" />
+              Upload Slate
+            </Button>
+            <Button variant="outline" size="sm" className="w-full justify-start text-xs">
+              <FileVideo className="w-3 h-3 mr-2" />
+              Upload Logo
+            </Button>
+            <Button variant="outline" size="sm" className="w-full justify-start text-xs">
+              <Settings className="w-3 h-3 mr-2" />
+              Publish Destination
+            </Button>
+          </div>
+
+          {/* New Project Button */}
           <Button 
             onClick={() => setIsNewProjectOpen(true)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            size="sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Project
