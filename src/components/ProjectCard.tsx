@@ -9,15 +9,23 @@ interface ProjectCardProps {
   collaborators: number;
   lastModified: string;
   progress: number;
-  image?: boolean;
+  image?: string;
 }
 
 const ProjectCard = ({ title, description, collaborators, lastModified, progress, image }: ProjectCardProps) => {
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer">
-      {image && (
+      {image ? (
+        <div className="w-full h-32 rounded-lg mb-4 overflow-hidden">
+          <img 
+            src={image} 
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
         <div className="w-full h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mb-4 flex items-center justify-center">
-          <span className="text-white font-medium">{title.charAt(0)}</span>
+          <span className="text-white font-medium text-2xl">{title.charAt(0)}</span>
         </div>
       )}
       
