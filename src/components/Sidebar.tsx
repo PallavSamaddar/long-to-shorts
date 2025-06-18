@@ -1,69 +1,71 @@
 
-import React from 'react';
-import { useLocation } from 'react-router-dom';
-import { Home, FileText, Video, Settings, Folder, Mic, Upload } from 'lucide-react';
-import NewProjectDialog from './NewProjectDialog';
+import React, { useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { Home, FolderOpen, FileText, Globe, Settings, Search, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import NewProjectDialog from '@/components/NewProjectDialog';
 
 const Sidebar = () => {
   const location = useLocation();
-  
+  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+
   const menuItems = [
-    { icon: Home, label: 'Dashboard', href: '/' },
-    { icon: Folder, label: 'Projects', href: '/projects' },
-    { icon: Mic, label: 'Transcription', href: '/transcription' },
-    { icon: Upload, label: 'Published Files', href: '/published' },
-    { icon: Video, label: 'Videos', href: '/videos' },
-    { icon: Settings, label: 'Settings', href: '/settings' },
+    { icon: Home, label: 'Dashboard', path: '/' },
+    { icon: FolderOpen, label: 'Projects', path: '/projects' },
+    { icon: FileText, label: 'Transcription', path: '/transcription' },
+    { icon: Globe, label: 'Published Files', path: '/published' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   return (
-    <div className="w-64 bg-slate-900 text-white h-screen flex flex-col">
-      {/* Logo/Brand */}
-      <div className="p-6 border-b border-slate-700">
-        <h1 className="text-xl font-bold">ContentCMS</h1>
-        <p className="text-sm text-slate-400 mt-1">Manage your content</p>
-      </div>
+    <>
+      <div className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen">
+        {/* Logo Section */}
+        <div className="p-6 border-b border-slate-200">
+          <h1 className="text-xl font-bold text-slate-900">Slike Chopper</h1>
+          <p className="text-sm text-slate-600 mt-1">Capture Important Segments</p>
+        </div>
 
-      {/* Quick Actions */}
-      <div className="px-4 mt-4">
-        <NewProjectDialog />
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-4 mt-6">
-        <ul className="space-y-1">
-          {menuItems.map((item, index) => {
-            const isActive = location.pathname === item.href;
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            
             return (
-              <li key={index}>
-                <a
-                  href={item.href}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    isActive ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </a>
-              </li>
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive 
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </Link>
             );
           })}
-        </ul>
-      </nav>
+        </nav>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-bold">JD</span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">John Doe</p>
-            <p className="text-xs text-slate-400">Admin</p>
-          </div>
+        {/* New Project Button */}
+        <div className="p-4 border-t border-slate-200">
+          <Button 
+            onClick={() => setIsNewProjectOpen(true)}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Project
+          </Button>
         </div>
       </div>
-    </div>
+
+      <NewProjectDialog 
+        open={isNewProjectOpen} 
+        onOpenChange={setIsNewProjectOpen} 
+      />
+    </>
   );
 };
 

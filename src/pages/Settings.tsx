@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import TopBar from '@/components/TopBar';
+import GlobalHeader from '@/components/GlobalHeader';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,13 +10,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Edit2, Trash2, Save, Youtube, Facebook, Instagram } from 'lucide-react';
 
 const Settings = () => {
   const [activeProject, setActiveProject] = useState('default');
+  const [selectedDestinations, setSelectedDestinations] = useState(['youtube1', 'youtube2']);
+  const [selectedLayout, setSelectedLayout] = useState('centered');
+  const [enableSlates, setEnableSlates] = useState(true);
+  
   const [publishDestinations, setPublishDestinations] = useState([
-    { id: 1, platform: 'YouTube', channel: 'Main Channel', status: 'connected' },
-    { id: 2, platform: 'YouTube', channel: 'Shorts Channel', status: 'connected' },
+    { id: 'youtube1', platform: 'YouTube', channel: 'Main Channel', status: 'connected' },
+    { id: 'youtube2', platform: 'YouTube', channel: 'Shorts Channel', status: 'connected' },
+    { id: 'facebook1', platform: 'Facebook', channel: 'Business Page', status: 'disconnected' },
   ]);
 
   const defaultProjects = [
@@ -28,21 +35,38 @@ const Settings = () => {
     { id: 'custom1', name: 'Marketing Videos', isDefault: false },
   ]);
 
+  const layouts = [
+    { id: 'centered', name: 'Centered Speaker' },
+    { id: 'side-by-side', name: 'Side-by-Side' },
+    { id: 'picture-in-picture', name: 'Picture-in-Picture' },
+    { id: 'full-screen', name: 'Full Screen' },
+    { id: 'split-screen', name: 'Split Screen' },
+    { id: 'custom', name: 'Custom' }
+  ];
+
+  const handleDestinationToggle = (destinationId: string) => {
+    setSelectedDestinations(prev => 
+      prev.includes(destinationId) 
+        ? prev.filter(id => id !== destinationId)
+        : [...prev, destinationId]
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex w-full">
       <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar />
+        <GlobalHeader />
+        
+        {/* Settings Header */}
+        <div className="bg-white border-b border-slate-200 px-6 py-6">
+          <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
+          <p className="text-slate-600 mt-2">Manage your content creation preferences and workspace settings</p>
+        </div>
         
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto space-y-8">
-            {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
-              <p className="text-slate-600 mt-2">Manage your content creation preferences and workspace settings</p>
-            </div>
-
             {/* Workspace Settings Selector */}
             <Card>
               <CardHeader>
@@ -94,13 +118,17 @@ const Settings = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Publish Destinations</CardTitle>
-                <CardDescription>Manage your connected social media and video platforms</CardDescription>
+                <CardDescription>Manage your connected social media and video platforms. Select multiple destinations as default.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {publishDestinations.map((destination) => (
                     <div key={destination.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
+                        <Checkbox 
+                          checked={selectedDestinations.includes(destination.id)}
+                          onCheckedChange={() => handleDestinationToggle(destination.id)}
+                        />
                         {destination.platform === 'YouTube' && <Youtube className="w-5 h-5 text-red-600" />}
                         {destination.platform === 'Facebook' && <Facebook className="w-5 h-5 text-blue-600" />}
                         <div>
@@ -190,12 +218,25 @@ const Settings = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['Centered Speaker', 'Side-by-Side', 'Picture-in-Picture', 'Full Screen', 'Split Screen', 'Custom'].map((template) => (
-                    <div key={template} className="p-4 border rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                  {layouts.map((layout) => (
+                    <div 
+                      key={layout.id} 
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        selectedLayout === layout.id 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-slate-300 hover:border-blue-300'
+                      }`}
+                      onClick={() => setSelectedLayout(layout.id)}
+                    >
                       <div className="w-full h-20 bg-slate-200 rounded mb-2 flex items-center justify-center">
                         <span className="text-xs text-slate-500">Preview</span>
                       </div>
-                      <p className="text-sm font-medium text-center">{template}</p>
+                      <p className="text-sm font-medium text-center">{layout.name}</p>
+                      {selectedLayout === layout.id && (
+                        <div className="flex justify-center mt-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -209,50 +250,60 @@ const Settings = () => {
                 <CardDescription>Configure intro and outro slates for your videos</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium">Pre Slates</label>
-                    <Select defaultValue="intro1">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="intro1">Company Intro</SelectItem>
-                        <SelectItem value="intro2">Podcast Intro</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Upload Pre Slate Video</label>
-                      <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
-                        <p className="text-sm text-slate-600">Drag and drop your pre slate video or click to browse</p>
-                        <Button variant="outline" className="mt-2">Choose Video File</Button>
-                      </div>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium">Enable Slates</label>
+                    <p className="text-xs text-slate-600">Add intro and outro slates to your videos</p>
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium">Post Slates</label>
-                    <Select defaultValue="outro1">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="outro1">Subscribe & Follow</SelectItem>
-                        <SelectItem value="outro2">Contact Info</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Upload Post Slate Video</label>
-                      <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
-                        <p className="text-sm text-slate-600">Drag and drop your post slate video or click to browse</p>
-                        <Button variant="outline" className="mt-2">Choose Video File</Button>
-                      </div>
-                    </div>
-                  </div>
+                  <Switch checked={enableSlates} onCheckedChange={setEnableSlates} />
                 </div>
+                
+                {enableSlates && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Pre Slates</label>
+                      <Select defaultValue="intro1">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="intro1">Company Intro</SelectItem>
+                          <SelectItem value="intro2">Podcast Intro</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Upload Pre Slate Video</label>
+                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                          <p className="text-sm text-slate-600">Drag and drop your pre slate video or click to browse</p>
+                          <Button variant="outline" className="mt-2">Choose Video File</Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Post Slates</label>
+                      <Select defaultValue="outro1">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="outro1">Subscribe & Follow</SelectItem>
+                          <SelectItem value="outro2">Contact Info</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Upload Post Slate Video</label>
+                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                          <p className="text-sm text-slate-600">Drag and drop your post slate video or click to browse</p>
+                          <Button variant="outline" className="mt-2">Choose Video File</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -266,7 +317,7 @@ const Settings = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="text-sm font-medium">Show Logo in Videos</label>
-                    <p className="text-xs text-slate-600">Display your logo as a watermark</p>
+                    <p className="text-xs text-slate-600">Display your logo</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
