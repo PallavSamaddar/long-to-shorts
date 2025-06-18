@@ -1,13 +1,15 @@
 
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { Home, FileText, Video, Settings, Plus, Search, Folder, Mic, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Sidebar = () => {
+  const location = useLocation();
+  
   const menuItems = [
-    { icon: Home, label: 'Dashboard', active: true, href: '/' },
+    { icon: Home, label: 'Dashboard', href: '/' },
     { icon: Folder, label: 'Projects', href: '/projects' },
-    { icon: FileText, label: 'Documents', href: '/documents' },
     { icon: Mic, label: 'Transcription', href: '/transcription' },
     { icon: Upload, label: 'Published Files', href: '/published' },
     { icon: Video, label: 'Videos', href: '/videos' },
@@ -45,19 +47,22 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 px-4">
         <ul className="space-y-1">
-          {menuItems.map((item, index) => (
-            <li key={index}>
-              <a
-                href={item.href}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                  item.active ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </a>
-            </li>
-          ))}
+          {menuItems.map((item, index) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <li key={index}>
+                <a
+                  href={item.href}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                    isActive ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </a>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

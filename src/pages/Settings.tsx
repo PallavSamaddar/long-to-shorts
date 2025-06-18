@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
@@ -20,7 +19,7 @@ const Settings = () => {
   ]);
 
   const defaultProjects = [
-    { id: 'default', name: 'Default Settings', isDefault: true },
+    { id: 'default', name: 'Default Workspace', isDefault: true },
     { id: 'podcast', name: 'Podcast Template', isDefault: true },
     { id: 'shorts', name: 'YouTube Shorts', isDefault: true },
   ];
@@ -41,20 +40,20 @@ const Settings = () => {
             {/* Header */}
             <div>
               <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
-              <p className="text-slate-600 mt-2">Manage your content creation preferences and project settings</p>
+              <p className="text-slate-600 mt-2">Manage your content creation preferences and workspace settings</p>
             </div>
 
-            {/* Project Settings Selector */}
+            {/* Workspace Settings Selector */}
             <Card>
               <CardHeader>
-                <CardTitle>Project Settings</CardTitle>
-                <CardDescription>Select or create project-specific settings templates</CardDescription>
+                <CardTitle>Workspace Settings</CardTitle>
+                <CardDescription>Select or create workspace-specific settings templates</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-4 mb-4">
                   <Select value={activeProject} onValueChange={setActiveProject}>
                     <SelectTrigger className="w-64">
-                      <SelectValue placeholder="Select project settings" />
+                      <SelectValue placeholder="Select workspace settings" />
                     </SelectTrigger>
                     <SelectContent>
                       <div className="p-2">
@@ -70,7 +69,7 @@ const Settings = () => {
                       </div>
                       <Separator />
                       <div className="p-2">
-                        <p className="text-xs text-slate-500 font-medium mb-2">CUSTOM PROJECTS</p>
+                        <p className="text-xs text-slate-500 font-medium mb-2">CUSTOM WORKSPACES</p>
                         {customProjects.map((project) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.name}
@@ -81,7 +80,7 @@ const Settings = () => {
                   </Select>
                   <Button variant="outline" size="sm">
                     <Plus className="w-4 h-4 mr-2" />
-                    New Project
+                    New Workspace
                   </Button>
                   <Button variant="outline" size="sm">
                     <Edit2 className="w-4 h-4 mr-2" />
@@ -224,6 +223,13 @@ const Settings = () => {
                         <SelectItem value="custom">Custom</SelectItem>
                       </SelectContent>
                     </Select>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Upload Pre Slate Video</label>
+                      <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                        <p className="text-sm text-slate-600">Drag and drop your pre slate video or click to browse</p>
+                        <Button variant="outline" className="mt-2">Choose Video File</Button>
+                      </div>
+                    </div>
                   </div>
                   <div className="space-y-3">
                     <label className="text-sm font-medium">Post Slates</label>
@@ -238,6 +244,13 @@ const Settings = () => {
                         <SelectItem value="custom">Custom</SelectItem>
                       </SelectContent>
                     </Select>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Upload Post Slate Video</label>
+                      <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                        <p className="text-sm text-slate-600">Drag and drop your post slate video or click to browse</p>
+                        <Button variant="outline" className="mt-2">Choose Video File</Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

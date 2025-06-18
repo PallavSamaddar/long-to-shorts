@@ -1,11 +1,10 @@
-
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
 import StatsCard from '@/components/StatsCard';
 import ProjectCard from '@/components/ProjectCard';
 import RecentActivity from '@/components/RecentActivity';
-import { FileText, Image, Video, Users, Plus } from 'lucide-react';
+import { FileText, Image, Video, Users, Plus, Upload, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -18,14 +17,14 @@ const Index = () => {
       icon: <FileText className="w-6 h-6" />
     },
     {
-      title: 'Media Files',
+      title: 'Media Published',
       value: '1,847',
       change: '+8%',
       trend: 'up' as const,
       icon: <Image className="w-6 h-6" />
     },
     {
-      title: 'Active Users',
+      title: 'Unprocessed Files',
       value: '156',
       change: '+23%',
       trend: 'up' as const,
@@ -125,20 +124,16 @@ const Index = () => {
                 
                 <div className="space-y-3">
                   <Button variant="outline" className="w-full justify-start">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Create Document
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Slate
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
                     <Image className="w-4 h-4 mr-2" />
-                    Upload Images
+                    Upload Logo
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
-                    <Video className="w-4 h-4 mr-2" />
-                    Record Video
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Users className="w-4 h-4 mr-2" />
-                    Invite Team
+                    <Settings className="w-4 h-4 mr-2" />
+                    Publish Destination
                   </Button>
                 </div>
               </div>

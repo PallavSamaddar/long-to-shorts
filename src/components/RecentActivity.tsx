@@ -8,7 +8,7 @@ const RecentActivity = () => {
       id: 1,
       type: 'document',
       action: 'created',
-      item: 'Marketing Strategy.docx',
+      item: 'Marketing Strategy',
       user: 'Sarah Johnson',
       time: '2 hours ago',
       icon: FileText
@@ -17,7 +17,7 @@ const RecentActivity = () => {
       id: 2,
       type: 'image',
       action: 'uploaded',
-      item: 'hero-banner.jpg',
+      item: 'hero-banner',
       user: 'Mike Chen',
       time: '4 hours ago',
       icon: Image
