@@ -95,10 +95,6 @@ const Index = () => {
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-slate-900">Recent Projects</h2>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Project
-                </Button>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
