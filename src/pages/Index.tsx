@@ -1,10 +1,11 @@
+
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
-import TopBar from '@/components/TopBar';
+import GlobalHeader from '@/components/GlobalHeader';
 import StatsCard from '@/components/StatsCard';
 import ProjectCard from '@/components/ProjectCard';
 import RecentActivity from '@/components/RecentActivity';
-import { FileText, Image, Video, Users, Plus, Upload, Settings } from 'lucide-react';
+import { FileText, Image, Video, Users, Upload, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -41,36 +42,36 @@ const Index = () => {
 
   const projects = [
     {
-      title: 'Marketing Campaign 2024',
-      description: 'Complete marketing strategy and content creation for the upcoming product launch.',
+      title: 'AI Revolution in 2024',
+      description: 'Complete overview of AI developments and their impact on technology.',
       collaborators: 8,
       lastModified: '2 hours ago',
       progress: 75,
-      image: true
+      image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=300&h=200&fit=crop'
     },
     {
-      title: 'Product Documentation',
-      description: 'Comprehensive documentation for new features and user guides.',
+      title: 'Machine Learning Basics',
+      description: 'Comprehensive guide to understanding machine learning fundamentals.',
       collaborators: 4,
       lastModified: '1 day ago',
       progress: 60,
-      image: true
+      image: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=300&h=200&fit=crop'
     },
     {
-      title: 'Brand Guidelines',
-      description: 'Updated brand guidelines including logo usage, colors, and typography.',
+      title: 'Tech Industry Analysis',
+      description: 'Deep dive into current technology trends and market analysis.',
       collaborators: 6,
       lastModified: '3 days ago',
       progress: 90,
-      image: true
+      image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=200&fit=crop'
     },
     {
-      title: 'Video Tutorial Series',
-      description: 'Educational video content for customer onboarding and feature tutorials.',
+      title: 'Programming Tutorial Series',
+      description: 'Educational content for developers learning new programming languages.',
       collaborators: 12,
       lastModified: '5 days ago',
       progress: 45,
-      image: true
+      image: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=300&h=200&fit=crop'
     }
   ];
 
@@ -79,7 +80,7 @@ const Index = () => {
       <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar />
+        <GlobalHeader />
         
         <main className="flex-1 overflow-y-auto p-6">
           {/* Stats Grid */}

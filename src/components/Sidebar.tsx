@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Home, FileText, Video, Settings, Plus, Search, Folder, Mic, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Home, FileText, Video, Settings, Folder, Mic, Upload } from 'lucide-react';
+import NewProjectDialog from './NewProjectDialog';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -24,28 +24,13 @@ const Sidebar = () => {
         <p className="text-sm text-slate-400 mt-1">Manage your content</p>
       </div>
 
-      {/* Search */}
-      <div className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-          <input 
-            type="text" 
-            placeholder="Search content..."
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
-      </div>
-
       {/* Quick Actions */}
-      <div className="px-4 mb-4">
-        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          New Project
-        </Button>
+      <div className="px-4 mt-4">
+        <NewProjectDialog />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4">
+      <nav className="flex-1 px-4 mt-6">
         <ul className="space-y-1">
           {menuItems.map((item, index) => {
             const isActive = location.pathname === item.href;

@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import TopBar from '@/components/TopBar';
-import { Search, Filter, Plus, MoreVertical } from 'lucide-react';
+import GlobalHeader from '@/components/GlobalHeader';
+import ProjectRowActions from '@/components/ProjectRowActions';
+import { Search, Filter, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -103,7 +103,7 @@ const Transcription = () => {
       <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar />
+        <GlobalHeader />
         
         <main className="flex-1 overflow-y-auto">
           <div className="p-6">
@@ -187,9 +187,7 @@ const Transcription = () => {
                         {getStatusBadge(project.status)}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-600">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
+                        <ProjectRowActions />
                       </TableCell>
                     </TableRow>
                   ))}
