@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FileText, Image, Video, User } from 'lucide-react';
 
 const RecentActivity = () => {
@@ -65,9 +66,11 @@ const RecentActivity = () => {
         ))}
       </div>
       
-      <button className="w-full text-center text-blue-600 hover:text-blue-700 text-sm font-medium mt-4 py-2 hover:bg-blue-50 rounded-lg transition-colors">
-        View all activity
-      </button>
+      <Link to="/recent-activity">
+        <button className="w-full text-center text-blue-600 hover:text-blue-700 text-sm font-medium mt-4 py-2 hover:bg-blue-50 rounded-lg transition-colors">
+          View all activity
+        </button>
+      </Link>
     </div>
   );
 };

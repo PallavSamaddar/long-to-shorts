@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import GlobalHeader from '@/components/GlobalHeader';
 import StatsCard from '@/components/StatsCard';
@@ -105,9 +106,11 @@ const Index = () => {
               </div>
               
               <div className="mt-6 text-center">
-                <Button variant="outline" className="text-slate-600 hover:text-slate-900">
-                  View All Projects
-                </Button>
+                <Link to="/projects">
+                  <Button variant="outline" className="text-slate-600 hover:text-slate-900">
+                    View All Projects
+                  </Button>
+                </Link>
               </div>
             </div>
 

@@ -10,6 +10,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Transcription from "./pages/Transcription";
 import PublishedFiles from "./pages/PublishedFiles";
 import Settings from "./pages/Settings";
+import RecentActivity from "./pages/RecentActivity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/transcription" element={<Transcription />} />
           <Route path="/published" element={<PublishedFiles />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/recent-activity" element={<RecentActivity />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
