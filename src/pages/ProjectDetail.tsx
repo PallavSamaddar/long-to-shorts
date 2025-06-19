@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Home, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
@@ -210,17 +209,16 @@ const ProjectDetail = () => {
               {/* Center: Time and Seekbar */}
               <div className="flex-1 flex items-center gap-4 mx-8">
                 <span className="text-sm text-slate-600">{currentTime}</span>
-                <span className="text-sm text-slate-400">/</span>
-                <span className="text-sm text-slate-600">{totalTime}</span>
                 <div className="flex-1 bg-slate-200 rounded-full h-2">
                   <div className="bg-blue-600 h-2 rounded-full w-1/4"></div>
                 </div>
+                <span className="text-sm text-slate-600">{totalTime}</span>
               </div>
 
               {/* Right side CTAs */}
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">
-                  Publish Settings
+                  Settings
                 </Button>
                 <Button variant="outline" size="sm">
                   Save Scene
