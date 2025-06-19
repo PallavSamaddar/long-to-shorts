@@ -127,6 +127,9 @@ const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
           onTranscriptSelect(segmentIndex);
         }
       }
+
+      // Clear browser's default text selection after processing
+      selection.removeAllRanges();
     }, [onTranscriptSelect]);
 
     const renderHighlightedText = (text: string, segmentIndex: number) => {
