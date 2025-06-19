@@ -1,3 +1,4 @@
+
 import React, { useImperativeHandle, forwardRef, useRef, useState, useCallback, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { transcripts } from '@/data/projectDetailData';
@@ -108,12 +109,11 @@ const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
       }
 
       if (segmentIndex !== -1) {
-        // Get the text content of the segment to calculate offsets
-        const segmentElement = transcriptRefs.current[segmentIndex];
-        const textElement = segmentElement?.querySelector('p');
-        if (textElement) {
-          const fullText = textElement.textContent || '';
-          const startOffset = fullText.indexOf(selectedText);
+        // Get the original transcript text (not the rendered HTML)
+        const originalText = transcripts[segmentIndex];
+        const startOffset = originalText.indexOf(selectedText);
+        
+        if (startOffset !== -1) {
           const endOffset = startOffset + selectedText.length;
 
           setTextSelection({
