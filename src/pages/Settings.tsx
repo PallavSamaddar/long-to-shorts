@@ -11,13 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Edit2, Trash2, Save, Youtube, Facebook, Instagram } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, Youtube, Facebook, Instagram, Check } from 'lucide-react';
 
 const Settings = () => {
   const [activeProject, setActiveProject] = useState('default');
   const [selectedDestinations, setSelectedDestinations] = useState(['youtube1', 'youtube2']);
   const [selectedLayout, setSelectedLayout] = useState('centered');
   const [enableSlates, setEnableSlates] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedLogo, setSelectedLogo] = useState('logo1');
   
   const [publishDestinations, setPublishDestinations] = useState([
     { id: 'youtube1', platform: 'YouTube', channel: 'Main Channel', status: 'connected' },
@@ -44,12 +46,25 @@ const Settings = () => {
     { id: 'custom', name: 'Custom' }
   ];
 
+  const logoOptions = [
+    { id: 'logo1', name: 'Corporate Logo', imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=100&h=100&fit=crop&crop=center' },
+    { id: 'logo2', name: 'Modern Logo', imageUrl: 'https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a?w=100&h=100&fit=crop&crop=center' },
+    { id: 'logo3', name: 'Creative Logo', imageUrl: 'https://images.unsplash.com/photo-1493397212122-2b85dda8106b?w=100&h=100&fit=crop&crop=center' },
+    { id: 'logo4', name: 'Tech Logo', imageUrl: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=100&h=100&fit=crop&crop=center' },
+    { id: 'logo5', name: 'Brand Logo', imageUrl: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302?w=100&h=100&fit=crop&crop=center' },
+    { id: 'logo6', name: 'Custom Logo', imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=100&h=100&fit=crop&crop=center' }
+  ];
+
   const handleDestinationToggle = (destinationId: string) => {
     setSelectedDestinations(prev => 
       prev.includes(destinationId) 
         ? prev.filter(id => id !== destinationId)
         : [...prev, destinationId]
     );
+  };
+
+  const isDefaultTemplate = (projectId: string) => {
+    return defaultProjects.some(project => project.id === projectId && project.isDefault);
   };
 
   return (
@@ -86,7 +101,9 @@ const Settings = () => {
                           <SelectItem key={project.id} value={project.id}>
                             <div className="flex items-center gap-2">
                               {project.name}
-                              <Badge variant="secondary" className="text-xs">Default</Badge>
+                              {activeProject === project.id && project.isDefault && (
+                                <Badge variant="secondary" className="text-xs">Default</Badge>
+                              )}
                             </div>
                           </SelectItem>
                         ))}
@@ -106,9 +123,13 @@ const Settings = () => {
                     <Plus className="w-4 h-4 mr-2" />
                     New Workspace
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsEditMode(!isEditMode)}
+                  >
                     <Edit2 className="w-4 h-4 mr-2" />
-                    Edit
+                    {isEditMode ? 'Done' : 'Edit'}
                   </Button>
                 </div>
               </CardContent>
@@ -128,6 +149,7 @@ const Settings = () => {
                         <Checkbox 
                           checked={selectedDestinations.includes(destination.id)}
                           onCheckedChange={() => handleDestinationToggle(destination.id)}
+                          disabled={!isEditMode}
                         />
                         {destination.platform === 'YouTube' && <Youtube className="w-5 h-5 text-red-600" />}
                         {destination.platform === 'Facebook' && <Facebook className="w-5 h-5 text-blue-600" />}
@@ -140,17 +162,17 @@ const Settings = () => {
                         <Badge variant={destination.status === 'connected' ? 'default' : 'secondary'}>
                           {destination.status}
                         </Badge>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" disabled={!isEditMode}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" disabled={!isEditMode}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
-                <Button variant="outline">
+                <Button variant="outline" disabled={!isEditMode}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Destination
                 </Button>
@@ -167,7 +189,7 @@ const Settings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Clip Minimum Duration</label>
-                    <Select defaultValue="30">
+                    <Select defaultValue="30" disabled={!isEditMode}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -181,7 +203,7 @@ const Settings = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Number of Clips</label>
-                    <Select defaultValue="5">
+                    <Select defaultValue="5" disabled={!isEditMode}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -196,7 +218,7 @@ const Settings = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Video Format</label>
-                  <Select defaultValue="both">
+                  <Select defaultValue="both" disabled={!isEditMode}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -225,8 +247,8 @@ const Settings = () => {
                         selectedLayout === layout.id 
                           ? 'border-blue-500 bg-blue-50' 
                           : 'border-slate-300 hover:border-blue-300'
-                      }`}
-                      onClick={() => setSelectedLayout(layout.id)}
+                      } ${!isEditMode ? 'cursor-not-allowed opacity-50' : ''}`}
+                      onClick={() => isEditMode && setSelectedLayout(layout.id)}
                     >
                       <div className="w-full h-20 bg-slate-200 rounded mb-2 flex items-center justify-center">
                         <span className="text-xs text-slate-500">Preview</span>
@@ -255,14 +277,14 @@ const Settings = () => {
                     <label className="text-sm font-medium">Enable Slates</label>
                     <p className="text-xs text-slate-600">Add intro and outro slates to your videos</p>
                   </div>
-                  <Switch checked={enableSlates} onCheckedChange={setEnableSlates} />
+                  <Switch checked={enableSlates} onCheckedChange={setEnableSlates} disabled={!isEditMode} />
                 </div>
                 
                 {enableSlates && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <label className="text-sm font-medium">Pre Slates</label>
-                      <Select defaultValue="intro1">
+                      <Select defaultValue="intro1" disabled={!isEditMode}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -275,15 +297,15 @@ const Settings = () => {
                       </Select>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Upload Pre Slate Video</label>
-                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                        <div className={`border-2 border-dashed border-slate-300 rounded-lg p-6 text-center ${!isEditMode ? 'opacity-50' : ''}`}>
                           <p className="text-sm text-slate-600">Drag and drop your pre slate video or click to browse</p>
-                          <Button variant="outline" className="mt-2">Choose Video File</Button>
+                          <Button variant="outline" className="mt-2" disabled={!isEditMode}>Choose Video File</Button>
                         </div>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <label className="text-sm font-medium">Post Slates</label>
-                      <Select defaultValue="outro1">
+                      <Select defaultValue="outro1" disabled={!isEditMode}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -296,9 +318,9 @@ const Settings = () => {
                       </Select>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Upload Post Slate Video</label>
-                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                        <div className={`border-2 border-dashed border-slate-300 rounded-lg p-6 text-center ${!isEditMode ? 'opacity-50' : ''}`}>
                           <p className="text-sm text-slate-600">Drag and drop your post slate video or click to browse</p>
-                          <Button variant="outline" className="mt-2">Choose Video File</Button>
+                          <Button variant="outline" className="mt-2" disabled={!isEditMode}>Choose Video File</Button>
                         </div>
                       </div>
                     </div>
@@ -319,12 +341,12 @@ const Settings = () => {
                     <label className="text-sm font-medium">Show Logo in Videos</label>
                     <p className="text-xs text-slate-600">Display your logo</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch defaultChecked disabled={!isEditMode} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Logo Position</label>
-                    <Select defaultValue="bottom-right">
+                    <Select defaultValue="bottom-right" disabled={!isEditMode}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -339,7 +361,7 @@ const Settings = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Logo Opacity</label>
-                    <Select defaultValue="80">
+                    <Select defaultValue="80" disabled={!isEditMode}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -353,11 +375,46 @@ const Settings = () => {
                     </Select>
                   </div>
                 </div>
+                
+                {/* Logo Selection Options */}
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">Choose Logo</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {logoOptions.map((logo) => (
+                      <div 
+                        key={logo.id} 
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          selectedLogo === logo.id 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-slate-300 hover:border-blue-300'
+                        } ${!isEditMode ? 'cursor-not-allowed opacity-50' : ''}`}
+                        onClick={() => isEditMode && setSelectedLogo(logo.id)}
+                      >
+                        <div className="w-full h-20 bg-slate-200 rounded mb-2 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={logo.imageUrl} 
+                            alt={logo.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-xs font-medium text-center">{logo.name}</p>
+                        {selectedLogo === logo.id && (
+                          <div className="flex justify-center mt-2">
+                            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                              <Check className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Upload Logo</label>
-                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                  <label className="text-sm font-medium">Upload Custom Logo</label>
+                  <div className={`border-2 border-dashed border-slate-300 rounded-lg p-6 text-center ${!isEditMode ? 'opacity-50' : ''}`}>
                     <p className="text-sm text-slate-600">Drag and drop your logo or click to browse</p>
-                    <Button variant="outline" className="mt-2">Choose File</Button>
+                    <Button variant="outline" className="mt-2" disabled={!isEditMode}>Choose File</Button>
                   </div>
                 </div>
               </CardContent>
@@ -375,12 +432,12 @@ const Settings = () => {
                     <label className="text-sm font-medium">Enable Transcript Slugs</label>
                     <p className="text-xs text-slate-600">Automatically add text overlays from speech</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch defaultChecked disabled={!isEditMode} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Slug Style</label>
-                    <Select defaultValue="modern">
+                    <Select defaultValue="modern" disabled={!isEditMode}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -395,7 +452,7 @@ const Settings = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Words per Slug</label>
-                    <Select defaultValue="3">
+                    <Select defaultValue="3" disabled={!isEditMode}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -413,8 +470,8 @@ const Settings = () => {
 
             {/* Save Settings */}
             <div className="flex justify-end gap-4">
-              <Button variant="outline">Reset to Defaults</Button>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button variant="outline" disabled={!isEditMode}>Reset to Defaults</Button>
+              <Button className="bg-blue-600 hover:bg-blue-700" disabled={!isEditMode}>
                 <Save className="w-4 h-4 mr-2" />
                 Save Settings
               </Button>
