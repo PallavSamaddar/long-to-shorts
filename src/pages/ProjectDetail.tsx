@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Home, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
@@ -77,9 +76,9 @@ const ProjectDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col w-full">
+    <div className="h-screen bg-slate-50 flex flex-col w-full overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      <div className="bg-white border-b border-slate-200 px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -106,15 +105,15 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex overflow-hidden">
         {/* Main Content - 3 Columns */}
-        <div className="flex-1 flex min-h-0">
+        <div className="flex-1 flex h-full">
           {/* Column 1: Scene Thumbnails (20%) */}
-          <div className="w-[20%] bg-white border-r border-slate-200 flex flex-col min-h-0">
+          <div className="w-[20%] bg-white border-r border-slate-200 flex flex-col h-full">
             <div className="p-4 border-b border-slate-200 flex-shrink-0">
               <h3 className="text-lg font-semibold text-slate-900">Scenes</h3>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-4">
                   <div className="space-y-3">
@@ -148,11 +147,11 @@ const ProjectDetail = () => {
           </div>
 
           {/* Column 2: Transcripts (40%) */}
-          <div className="w-[40%] bg-white border-r border-slate-200 flex flex-col min-h-0">
+          <div className="w-[40%] bg-white border-r border-slate-200 flex flex-col h-full">
             <div className="p-4 border-b border-slate-200 flex-shrink-0">
               <h3 className="text-lg font-semibold text-slate-900">Transcript</h3>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-4">
                   <div className="space-y-4">
@@ -198,71 +197,71 @@ const ProjectDetail = () => {
             </div>
           </div>
         </div>
+      </main>
 
-        {/* Footer: Video Controller */}
-        <div className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            {/* Left side controls */}
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handlePreviousScene}
-                disabled={selectedScene === 0}
-              >
-                <SkipBack className="w-4 h-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={togglePlayPause}
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleNextScene}
-                disabled={selectedScene === scenes.length - 1}
-              >
-                <SkipForward className="w-4 h-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleMute}
-              >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </Button>
-            </div>
+      {/* Footer: Video Controller */}
+      <div className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          {/* Left side controls */}
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePreviousScene}
+              disabled={selectedScene === 0}
+            >
+              <SkipBack className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={togglePlayPause}
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNextScene}
+              disabled={selectedScene === scenes.length - 1}
+            >
+              <SkipForward className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMute}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </Button>
+          </div>
 
-            {/* Center: Time and Seekbar */}
-            <div className="flex-1 flex items-center gap-4 mx-8">
-              <span className="text-sm text-slate-600">{currentTime}</span>
-              <div className="flex-1 bg-slate-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full w-1/4"></div>
-              </div>
-              <span className="text-sm text-slate-600">{totalTime}</span>
+          {/* Center: Time and Seekbar */}
+          <div className="flex-1 flex items-center gap-4 mx-8">
+            <span className="text-sm text-slate-600">{currentTime}</span>
+            <div className="flex-1 bg-slate-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full w-1/4"></div>
             </div>
+            <span className="text-sm text-slate-600">{totalTime}</span>
+          </div>
 
-            {/* Right side CTAs */}
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                Settings
-              </Button>
-              <Button variant="outline" size="sm">
-                Save Scene
-              </Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                Publish All Scenes
-              </Button>
-            </div>
+          {/* Right side CTAs */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              Settings
+            </Button>
+            <Button variant="outline" size="sm">
+              Save Scene
+            </Button>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              Publish All Scenes
+            </Button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
