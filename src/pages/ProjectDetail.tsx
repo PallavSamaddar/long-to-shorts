@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import GlobalHeader from '@/components/GlobalHeader';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Home, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ProjectDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [selectedScene, setSelectedScene] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -27,13 +27,13 @@ const ProjectDetail = () => {
   ];
 
   const transcripts = [
-    "Welcome to our comprehensive overview of AI developments in 2024. In this segment, we'll explore the revolutionary changes that artificial intelligence has brought to various industries and how it's reshaping our understanding of technology. The pace of innovation has been unprecedented, with breakthrough developments emerging almost weekly across different domains.",
-    "Machine learning algorithms have become increasingly sophisticated, enabling computers to learn from data without explicit programming. This fundamental shift has opened new possibilities for automation and intelligent decision-making across multiple sectors. From healthcare diagnostics to financial fraud detection, these systems are now capable of processing vast amounts of information with remarkable accuracy.",
-    "The integration of AI in everyday applications has transformed user experiences dramatically. From personalized recommendations on streaming platforms to intelligent assistants that understand natural language, artificial intelligence is now seamlessly woven into the fabric of our digital interactions. Smart home devices, autonomous vehicles, and predictive text systems all rely on these advanced algorithms.",
-    "Natural language processing has reached new heights with the development of large language models. These systems can now understand context, generate human-like text, and even engage in complex conversations. The implications for content creation, customer service, and educational applications are profound, opening up possibilities we could barely imagine just a few years ago.",
-    "Computer vision technology has advanced to the point where machines can identify objects, recognize faces, and even interpret emotions with incredible precision. This has revolutionized industries from retail to security, enabling applications like automated checkout systems, surveillance networks, and medical imaging diagnostics that can detect diseases earlier than ever before.",
-    "The ethical considerations surrounding AI development have become increasingly important as these technologies become more powerful and widespread. Questions about bias, privacy, job displacement, and the concentration of AI capabilities in the hands of a few large corporations are driving important conversations about governance, regulation, and the responsible development of artificial intelligence.",
-    "Looking ahead, the future of AI promises even more groundbreaking developments. Emerging technologies like quantum computing and advanced neural networks are set to push the boundaries of what's possible in artificial intelligence. As we conclude this overview, it's clear that AI will continue to be a driving force in technological innovation, fundamentally changing how we work, learn, and interact with the world around us."
+    "Welcome to our comprehensive overview of AI developments in 2024. In this segment, we'll explore the revolutionary changes that artificial intelligence has brought to various industries and how it's reshaping our understanding of technology. The pace of innovation has been unprecedented, with breakthrough developments emerging almost weekly across different domains. From machine learning breakthroughs to natural language processing advances, this year has marked a significant turning point in the evolution of artificial intelligence.",
+    "Machine learning algorithms have become increasingly sophisticated, enabling computers to learn from data without explicit programming. This fundamental shift has opened new possibilities for automation and intelligent decision-making across multiple sectors. From healthcare diagnostics to financial fraud detection, these systems are now capable of processing vast amounts of information with remarkable accuracy. The integration of deep learning techniques has particularly enhanced the ability of machines to recognize patterns in complex datasets, leading to more accurate predictions and insights.",
+    "The integration of AI in everyday applications has transformed user experiences dramatically. From personalized recommendations on streaming platforms to intelligent assistants that understand natural language, artificial intelligence is now seamlessly woven into the fabric of our digital interactions. Smart home devices, autonomous vehicles, and predictive text systems all rely on these advanced algorithms. The user experience has become more intuitive and responsive, with AI systems learning from user behavior to provide increasingly personalized and relevant interactions.",
+    "Natural language processing has reached new heights with the development of large language models. These systems can now understand context, generate human-like text, and even engage in complex conversations. The implications for content creation, customer service, and educational applications are profound, opening up possibilities we could barely imagine just a few years ago. Advanced models can now translate languages with near-human accuracy, summarize complex documents, and even assist in creative writing tasks, fundamentally changing how we interact with information and technology.",
+    "Computer vision technology has advanced to the point where machines can identify objects, recognize faces, and even interpret emotions with incredible precision. This has revolutionized industries from retail to security, enabling applications like automated checkout systems, surveillance networks, and medical imaging diagnostics that can detect diseases earlier than ever before. The combination of high-resolution imaging and sophisticated neural networks has made it possible for machines to see and understand visual information in ways that often surpass human capabilities.",
+    "The ethical considerations surrounding AI development have become increasingly important as these technologies become more powerful and widespread. Questions about bias, privacy, job displacement, and the concentration of AI capabilities in the hands of a few large corporations are driving important conversations about governance, regulation, and the responsible development of artificial intelligence. Industry leaders and policymakers are working together to establish frameworks that ensure AI development serves the broader interests of society while maintaining innovation and competitiveness.",
+    "Looking ahead, the future of AI promises even more groundbreaking developments. Emerging technologies like quantum computing and advanced neural networks are set to push the boundaries of what's possible in artificial intelligence. Research in areas such as artificial general intelligence, neuromorphic computing, and brain-computer interfaces suggests that we are only at the beginning of the AI revolution. As we conclude this overview, it's clear that AI will continue to be a driving force in technological innovation, fundamentally changing how we work, learn, and interact with the world around us."
   ];
 
   const handleSceneSelect = (index: number) => {
@@ -60,22 +60,50 @@ const ProjectDetail = () => {
     setIsMuted(!isMuted);
   };
 
+  const handleBackClick = () => {
+    navigate('/projects');
+  };
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col w-full">
-      <GlobalHeader />
-      
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackClick}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleHomeClick}
+              className="flex items-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </Button>
+          </div>
+          <h1 className="text-xl font-bold text-slate-900">Marketing Campaign Q4 - Video Overview</h1>
+          <div className="w-32"></div> {/* Spacer for center alignment */}
+        </div>
+      </div>
+
       <main className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col">
-          {/* Header */}
-          <div className="p-6 border-b border-slate-200 bg-white">
-            <h1 className="text-2xl font-bold text-slate-900">Marketing Campaign Q4</h1>
-            <p className="text-slate-600 mt-1">Project Details</p>
-          </div>
-
           {/* Main Content - 3 Columns */}
           <div className="flex-1 flex overflow-hidden">
-            {/* Column 1: Scene Thumbnails (30%) */}
-            <div className="w-[30%] bg-white border-r border-slate-200">
+            {/* Column 1: Scene Thumbnails (20%) */}
+            <div className="w-[20%] bg-white border-r border-slate-200">
               <ScrollArea className="h-full">
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-slate-900 mb-4">Scenes</h3>
@@ -108,8 +136,8 @@ const ProjectDetail = () => {
               </ScrollArea>
             </div>
 
-            {/* Column 2: Transcripts (35%) */}
-            <div className="w-[35%] bg-white border-r border-slate-200">
+            {/* Column 2: Transcripts (40%) */}
+            <div className="w-[40%] bg-white border-r border-slate-200">
               <div className="p-4 h-full flex flex-col">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Transcript</h3>
                 <ScrollArea className="flex-1">
@@ -122,8 +150,8 @@ const ProjectDetail = () => {
               </div>
             </div>
 
-            {/* Column 3: Video Player (35%) */}
-            <div className="w-[35%] bg-black flex items-center justify-center p-6">
+            {/* Column 3: Video Player (40%) */}
+            <div className="w-[40%] bg-black flex items-center justify-center p-6">
               <div className="w-full max-w-full">
                 <AspectRatio ratio={16 / 9} className="bg-slate-800 rounded-lg overflow-hidden">
                   <div className="w-full h-full flex items-center justify-center">
