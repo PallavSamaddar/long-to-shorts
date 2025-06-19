@@ -2,8 +2,8 @@
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import GlobalHeader from '@/components/GlobalHeader';
-import { FileText, Image, Video, User, Clock, Calendar } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { FileText, Image, Video, User } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const RecentActivity = () => {
   const allActivities = [
@@ -131,41 +131,48 @@ const RecentActivity = () => {
             <p className="text-slate-600 mt-1">Track all recent actions and updates across your projects</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allActivities.map((activity) => (
-              <Card key={activity.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getTypeColor(activity.type)}`}>
-                      <activity.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">
-                        {activity.user} {activity.action}
-                      </p>
-                      <p className="text-sm font-semibold text-slate-900 mt-1">
-                        {activity.item}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-slate-600 mb-4">
-                    {activity.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3 h-3" />
-                      <span>{activity.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-3 h-3" />
-                      <span>{activity.date}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Activity</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allActivities.map((activity) => (
+                  <TableRow key={activity.id}>
+                    <TableCell>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTypeColor(activity.type)}`}>
+                        <activity.icon className="w-4 h-4" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-slate-900">{activity.item}</p>
+                        <p className="text-sm text-slate-600 capitalize">{activity.action}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium text-slate-900">{activity.user}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm text-slate-600">{activity.description}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm text-slate-900">{activity.date}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm text-slate-600">{activity.time}</p>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </main>
       </div>
