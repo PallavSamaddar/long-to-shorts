@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import GlobalHeader from '@/components/GlobalHeader';
 import ProjectRowActions from '@/components/ProjectRowActions';
@@ -10,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 
 const Projects = () => {
   const [selectedFilter, setSelectedFilter] = useState('all-projects');
+  const navigate = useNavigate();
 
   const filters = [
     { id: 'all-projects', label: 'All Projects', count: 156 },
@@ -98,6 +101,12 @@ const Projects = () => {
     );
   };
 
+  const handleRowClick = (project: typeof projects[0]) => {
+    if (project.status === 'Ready') {
+      navigate(`/projects/${project.id}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex w-full">
       <Sidebar />
@@ -170,7 +179,13 @@ const Projects = () => {
                 </TableHeader>
                 <TableBody>
                   {projects.map((project) => (
-                    <TableRow key={project.id} className="hover:bg-slate-50 cursor-pointer">
+                    <TableRow 
+                      key={project.id} 
+                      className={`hover:bg-slate-50 ${
+                        project.status === 'Ready' ? 'cursor-pointer' : 'cursor-default'
+                      }`}
+                      onClick={() => handleRowClick(project)}
+                    >
                       <TableCell>
                         <div className="font-medium text-slate-900">{project.name}</div>
                       </TableCell>
