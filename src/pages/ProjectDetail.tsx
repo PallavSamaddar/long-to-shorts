@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Home, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
@@ -9,6 +10,7 @@ const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [selectedScene, setSelectedScene] = useState(0);
+  const [selectedTranscript, setSelectedTranscript] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState("00:00:00");
@@ -26,17 +28,24 @@ const ProjectDetail = () => {
   ];
 
   const transcripts = [
-    "Welcome to our comprehensive overview of AI developments in 2024. In this segment, we'll explore the revolutionary changes that artificial intelligence has brought to various industries and how it's reshaping our understanding of technology. The pace of innovation has been unprecedented, with breakthrough developments emerging almost weekly across different domains. From machine learning breakthroughs to natural language processing advances, this year has marked a significant turning point in the evolution of artificial intelligence.",
-    "Machine learning algorithms have become increasingly sophisticated, enabling computers to learn from data without explicit programming. This fundamental shift has opened new possibilities for automation and intelligent decision-making across multiple sectors. From healthcare diagnostics to financial fraud detection, these systems are now capable of processing vast amounts of information with remarkable accuracy. The integration of deep learning techniques has particularly enhanced the ability of machines to recognize patterns in complex datasets, leading to more accurate predictions and insights.",
-    "The integration of AI in everyday applications has transformed user experiences dramatically. From personalized recommendations on streaming platforms to intelligent assistants that understand natural language, artificial intelligence is now seamlessly woven into the fabric of our digital interactions. Smart home devices, autonomous vehicles, and predictive text systems all rely on these advanced algorithms. The user experience has become more intuitive and responsive, with AI systems learning from user behavior to provide increasingly personalized and relevant interactions.",
-    "Natural language processing has reached new heights with the development of large language models. These systems can now understand context, generate human-like text, and even engage in complex conversations. The implications for content creation, customer service, and educational applications are profound, opening up possibilities we could barely imagine just a few years ago. Advanced models can now translate languages with near-human accuracy, summarize complex documents, and even assist in creative writing tasks, fundamentally changing how we interact with information and technology.",
-    "Computer vision technology has advanced to the point where machines can identify objects, recognize faces, and even interpret emotions with incredible precision. This has revolutionized industries from retail to security, enabling applications like automated checkout systems, surveillance networks, and medical imaging diagnostics that can detect diseases earlier than ever before. The combination of high-resolution imaging and sophisticated neural networks has made it possible for machines to see and understand visual information in ways that often surpass human capabilities.",
-    "The ethical considerations surrounding AI development have become increasingly important as these technologies become more powerful and widespread. Questions about bias, privacy, job displacement, and the concentration of AI capabilities in the hands of a few large corporations are driving important conversations about governance, regulation, and the responsible development of artificial intelligence. Industry leaders and policymakers are working together to establish frameworks that ensure AI development serves the broader interests of society while maintaining innovation and competitiveness.",
-    "Looking ahead, the future of AI promises even more groundbreaking developments. Emerging technologies like quantum computing and advanced neural networks are set to push the boundaries of what's possible in artificial intelligence. Research in areas such as artificial general intelligence, neuromorphic computing, and brain-computer interfaces suggests that we are only at the beginning of the AI revolution. As we conclude this overview, it's clear that AI will continue to be a driving force in technological innovation, fundamentally changing how we work, learn, and interact with the world around us."
+    "Welcome to our comprehensive overview of AI developments in 2024. In this segment, we'll explore the revolutionary changes that artificial intelligence has brought to various industries and how it's reshaping our understanding of technology. The pace of innovation has been unprecedented, with breakthrough developments emerging almost weekly across different domains.",
+    "Machine learning algorithms have become increasingly sophisticated, enabling computers to learn from data without explicit programming. This fundamental shift has opened new possibilities for automation and intelligent decision-making across multiple sectors. From healthcare diagnostics to financial fraud detection, these systems are now capable of processing vast amounts of information with remarkable accuracy.",
+    "The integration of AI in everyday applications has transformed user experiences dramatically. From personalized recommendations on streaming platforms to intelligent assistants that understand natural language, artificial intelligence is now seamlessly woven into the fabric of our digital interactions. Smart home devices, autonomous vehicles, and predictive text systems all rely on these advanced algorithms.",
+    "Natural language processing has reached new heights with the development of large language models. These systems can now understand context, generate human-like text, and even engage in complex conversations. The implications for content creation, customer service, and educational applications are profound, opening up possibilities we could barely imagine just a few years ago.",
+    "Computer vision technology has advanced to the point where machines can identify objects, recognize faces, and even interpret emotions with incredible precision. This has revolutionized industries from retail to security, enabling applications like automated checkout systems, surveillance networks, and medical imaging diagnostics that can detect diseases earlier than ever before.",
+    "The ethical considerations surrounding AI development have become increasingly important as these technologies become more powerful and widespread. Questions about bias, privacy, job displacement, and the concentration of AI capabilities in the hands of a few large corporations are driving important conversations about governance, regulation, and the responsible development of artificial intelligence.",
+    "Artificial intelligence is transforming the healthcare industry in unprecedented ways. From drug discovery and personalized medicine to diagnostic imaging and robotic surgery, AI is enabling medical professionals to provide more accurate, efficient, and effective care. Machine learning models can now analyze medical images faster than human radiologists and predict patient outcomes with remarkable accuracy.",
+    "The business world has embraced AI as a competitive advantage, with companies using machine learning for everything from supply chain optimization to customer relationship management. Predictive analytics helps businesses forecast demand, while chatbots and virtual assistants handle customer inquiries around the clock. The automation of routine tasks has freed up human workers to focus on more creative and strategic activities.",
+    "Educational technology powered by AI is personalizing learning experiences for students worldwide. Adaptive learning platforms adjust content difficulty based on individual progress, while AI tutors provide instant feedback and support. Language learning apps use speech recognition to help users improve pronunciation, and automated essay grading systems provide detailed feedback on writing assignments.",
+    "Looking ahead, the future of AI promises even more groundbreaking developments. Emerging technologies like quantum computing and advanced neural networks are set to push the boundaries of what's possible in artificial intelligence. Research in areas such as artificial general intelligence, neuromorphic computing, and brain-computer interfaces suggests that we are only at the beginning of the AI revolution."
   ];
 
   const handleSceneSelect = (index: number) => {
     setSelectedScene(index);
+  };
+
+  const handleTranscriptSelect = (index: number) => {
+    setSelectedTranscript(index);
   };
 
   const handlePreviousScene = () => {
@@ -140,10 +149,27 @@ const ProjectDetail = () => {
               <div className="p-4 h-full flex flex-col">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Transcript</h3>
                 <ScrollArea className="flex-1">
-                  <div className="prose prose-sm max-w-none pr-4">
-                    <p className="text-slate-700 leading-relaxed">
-                      {transcripts[selectedScene] || transcripts[0]}
-                    </p>
+                  <div className="space-y-4 pr-4">
+                    {transcripts.map((transcript, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleTranscriptSelect(index)}
+                        className={`p-4 rounded-lg cursor-pointer transition-all ${
+                          selectedTranscript === index
+                            ? 'bg-yellow-100 border-2 border-yellow-300'
+                            : 'hover:bg-slate-50 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-sm font-medium text-slate-500 min-w-[24px]">
+                            {index + 1}.
+                          </span>
+                          <p className="text-slate-700 leading-relaxed text-sm">
+                            {transcript}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </ScrollArea>
               </div>
