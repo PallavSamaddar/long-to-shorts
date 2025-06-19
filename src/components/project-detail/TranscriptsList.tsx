@@ -1,4 +1,3 @@
-
 import React, { useImperativeHandle, forwardRef, useRef, useState, useCallback, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { transcripts } from '@/data/projectDetailData';
@@ -20,15 +19,15 @@ interface TextSelection {
   selectedText: string;
 }
 
-// Predefined highlights for each scene
+// Predefined highlights for each scene - longer text sections
 const sceneHighlights = [
-  { segmentIndex: 0, startOffset: 85, endOffset: 145, selectedText: "artificial intelligence has brought to various industries" },
-  { segmentIndex: 1, startOffset: 0, endOffset: 45, selectedText: "Machine learning algorithms have become" },
-  { segmentIndex: 2, startOffset: 30, endOffset: 85, selectedText: "AI in everyday applications has transformed user" },
-  { segmentIndex: 3, startOffset: 0, endOffset: 55, selectedText: "Natural language processing has reached new heights" },
-  { segmentIndex: 4, startOffset: 0, endOffset: 45, selectedText: "Computer vision technology has advanced" },
-  { segmentIndex: 5, startOffset: 4, endOffset: 65, selectedText: "ethical considerations surrounding AI development" },
-  { segmentIndex: 6, startOffset: 0, endOffset: 50, selectedText: "Artificial intelligence is transforming the healthcare" }
+  { segmentIndex: 0, startOffset: 50, endOffset: 200, selectedText: "we'll explore the revolutionary changes that artificial intelligence has brought to various industries and how it's reshaping our understanding of technology" },
+  { segmentIndex: 1, startOffset: 0, endOffset: 150, selectedText: "Machine learning algorithms have become increasingly sophisticated, enabling computers to learn from data without explicit programming" },
+  { segmentIndex: 2, startOffset: 20, endOffset: 180, selectedText: "The integration of AI in everyday applications has transformed user experiences dramatically. From personalized recommendations on streaming platforms to intelligent assistants" },
+  { segmentIndex: 3, startOffset: 0, endOffset: 160, selectedText: "Natural language processing has reached new heights with the development of large language models. These systems can now understand context, generate human-like text" },
+  { segmentIndex: 4, startOffset: 0, endOffset: 170, selectedText: "Computer vision technology has advanced to the point where machines can identify objects, recognize faces, and even interpret emotions with incredible precision" },
+  { segmentIndex: 5, startOffset: 0, endOffset: 180, selectedText: "The ethical considerations surrounding AI development have become increasingly important as these technologies become more powerful and widespread" },
+  { segmentIndex: 6, startOffset: 0, endOffset: 190, selectedText: "Artificial intelligence is transforming the healthcare industry in unprecedented ways. From drug discovery and personalized medicine to diagnostic imaging and robotic surgery" }
 ];
 
 const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
@@ -55,6 +54,22 @@ const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
         }
       }
     }));
+
+    // Auto-scroll to highlighted segment when scene changes
+    useEffect(() => {
+      const sceneHighlight = sceneHighlights[selectedScene % sceneHighlights.length];
+      if (sceneHighlight) {
+        const element = transcriptRefs.current[sceneHighlight.segmentIndex];
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }, 200);
+        }
+      }
+    }, [selectedScene]);
 
     // Generate timestamps for each transcript segment
     const generateTimestamp = (index: number) => {
