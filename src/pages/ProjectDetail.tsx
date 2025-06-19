@@ -111,10 +111,12 @@ const ProjectDetail = () => {
           {/* Main Content - 3 Columns */}
           <div className="flex-1 flex overflow-hidden">
             {/* Column 1: Scene Thumbnails (20%) */}
-            <div className="w-[20%] bg-white border-r border-slate-200">
-              <ScrollArea className="h-full">
+            <div className="w-[20%] bg-white border-r border-slate-200 flex flex-col">
+              <div className="p-4 border-b border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-900">Scenes</h3>
+              </div>
+              <ScrollArea className="flex-1">
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Scenes</h3>
                   <div className="space-y-3">
                     {scenes.map((scene, index) => (
                       <div
@@ -145,11 +147,13 @@ const ProjectDetail = () => {
             </div>
 
             {/* Column 2: Transcripts (40%) */}
-            <div className="w-[40%] bg-white border-r border-slate-200">
-              <div className="p-4 h-full flex flex-col">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Transcript</h3>
-                <ScrollArea className="flex-1">
-                  <div className="space-y-4 pr-4">
+            <div className="w-[40%] bg-white border-r border-slate-200 flex flex-col">
+              <div className="p-4 border-b border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-900">Transcript</h3>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-4">
+                  <div className="space-y-4">
                     {transcripts.map((transcript, index) => (
                       <div
                         key={index}
@@ -171,8 +175,8 @@ const ProjectDetail = () => {
                       </div>
                     ))}
                   </div>
-                </ScrollArea>
-              </div>
+                </div>
+              </ScrollArea>
             </div>
 
             {/* Column 3: Video Player (40%) */}
