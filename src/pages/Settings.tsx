@@ -20,6 +20,7 @@ const Settings = () => {
   const [enableSlates, setEnableSlates] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState('logo1');
+  const [selectedSlugStyle, setSelectedSlugStyle] = useState('modern');
   
   const [publishDestinations, setPublishDestinations] = useState([
     { id: 'youtube1', platform: 'YouTube', channel: 'Main Channel', status: 'connected' },
@@ -53,6 +54,51 @@ const Settings = () => {
     { id: 'logo4', name: 'Tech Logo', imageUrl: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=100&h=100&fit=crop&crop=center' },
     { id: 'logo5', name: 'Brand Logo', imageUrl: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302?w=100&h=100&fit=crop&crop=center' },
     { id: 'logo6', name: 'Custom Logo', imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=100&h=100&fit=crop&crop=center' }
+  ];
+
+  const slugStyles = [
+    { 
+      id: 'minimal', 
+      name: 'Minimal', 
+      preview: 'This is an example text with ',
+      highlightWord: 'highlighted',
+      highlightStyle: 'bg-gray-200 text-gray-800 px-1 rounded font-normal'
+    },
+    { 
+      id: 'modern', 
+      name: 'Modern', 
+      preview: 'This is an example text with ',
+      highlightWord: 'highlighted',
+      highlightStyle: 'bg-blue-500 text-white px-2 py-1 rounded-md font-semibold'
+    },
+    { 
+      id: 'bold', 
+      name: 'Bold', 
+      preview: 'This is an example text with ',
+      highlightWord: 'highlighted',
+      highlightStyle: 'bg-yellow-400 text-black px-2 py-1 font-bold border-2 border-yellow-600'
+    },
+    { 
+      id: 'elegant', 
+      name: 'Elegant', 
+      preview: 'This is an example text with ',
+      highlightWord: 'highlighted',
+      highlightStyle: 'bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium border border-purple-300'
+    },
+    { 
+      id: 'neon', 
+      name: 'Neon', 
+      preview: 'This is an example text with ',
+      highlightWord: 'highlighted',
+      highlightStyle: 'bg-green-400 text-black px-2 py-1 font-bold shadow-lg border-2 border-green-600'
+    },
+    { 
+      id: 'retro', 
+      name: 'Retro', 
+      preview: 'This is an example text with ',
+      highlightWord: 'highlighted',
+      highlightStyle: 'bg-orange-500 text-white px-3 py-1 font-bold transform -skew-x-12'
+    }
   ];
 
   const handleDestinationToggle = (destinationId: string) => {
@@ -179,7 +225,6 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            {/* Video Settings */}
             <Card>
               <CardHeader>
                 <CardTitle>Video Settings</CardTitle>
@@ -232,7 +277,6 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            {/* Video Layout Options */}
             <Card>
               <CardHeader>
                 <CardTitle>Video Layout Options</CardTitle>
@@ -265,7 +309,6 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            {/* Slates Settings */}
             <Card>
               <CardHeader>
                 <CardTitle>Slates Settings</CardTitle>
@@ -434,35 +477,39 @@ const Settings = () => {
                   </div>
                   <Switch defaultChecked disabled={!isEditMode} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Slug Style</label>
-                    <Select defaultValue="modern" disabled={!isEditMode}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="minimal">Minimal</SelectItem>
-                        <SelectItem value="modern">Modern</SelectItem>
-                        <SelectItem value="bold">Bold</SelectItem>
-                        <SelectItem value="elegant">Elegant</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Words per Slug</label>
-                    <Select defaultValue="3" disabled={!isEditMode}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2">2 words</SelectItem>
-                        <SelectItem value="3">3 words</SelectItem>
-                        <SelectItem value="4">4 words</SelectItem>
-                        <SelectItem value="5">5 words</SelectItem>
-                      </SelectContent>
-                    </Select>
+                
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">Slug Style</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {slugStyles.map((style) => (
+                      <div 
+                        key={style.id} 
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          selectedSlugStyle === style.id 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-slate-300 hover:border-blue-300'
+                        } ${!isEditMode ? 'cursor-not-allowed opacity-50' : ''}`}
+                        onClick={() => isEditMode && setSelectedSlugStyle(style.id)}
+                      >
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-slate-700">{style.name}</p>
+                          <div className="text-sm text-slate-600">
+                            {style.preview}
+                            <span className={style.highlightStyle}>
+                              {style.highlightWord}
+                            </span>
+                            {' word example.'}
+                          </div>
+                        </div>
+                        {selectedSlugStyle === style.id && (
+                          <div className="flex justify-center mt-3">
+                            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                              <Check className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
