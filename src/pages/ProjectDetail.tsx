@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ProjectDetailHeader from '@/components/project-detail/ProjectDetailHeader';
 import ScenesList from '@/components/project-detail/ScenesList';
-import TranscriptsList from '@/components/project-detail/TranscriptsList';
+import TranscriptsList, { TranscriptsListRef } from '@/components/project-detail/TranscriptsList';
 import VideoPlayer from '@/components/project-detail/VideoPlayer';
 import VideoController from '@/components/project-detail/VideoController';
 import { scenes, transcripts } from '@/data/projectDetailData';
@@ -15,12 +15,19 @@ const ProjectDetail = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState("00:00:00");
   const [totalTime] = useState("00:12:34");
+  
+  const transcriptsRef = useRef<TranscriptsListRef>(null);
 
   const handleSceneSelect = (index: number) => {
     setSelectedScene(index);
     // Randomly select a different transcript when scene changes
     const randomTranscriptIndex = Math.floor(Math.random() * transcripts.length);
     setSelectedTranscript(randomTranscriptIndex);
+    
+    // Auto-scroll to the selected transcript
+    setTimeout(() => {
+      transcriptsRef.current?.scrollToTranscript(randomTranscriptIndex);
+    }, 100);
   };
 
   const handleTranscriptSelect = (index: number) => {
@@ -59,6 +66,7 @@ const ProjectDetail = () => {
           />
           
           <TranscriptsList
+            ref={transcriptsRef}
             selectedTranscript={selectedTranscript}
             onTranscriptSelect={handleTranscriptSelect}
           />
