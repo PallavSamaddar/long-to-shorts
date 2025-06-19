@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Home, FolderOpen, FileText, Globe, Settings, Search, Plus, Upload, FileVideo } from 'lucide-react';
+import { Home, FolderOpen, FileText, Globe, Settings, Search, Plus, Upload, FileVideo, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NewProjectDialog from '@/components/NewProjectDialog';
 
@@ -63,8 +63,8 @@ const Sidebar = () => {
               Upload Logo
             </Button>
             <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-              <Settings className="w-3 h-3 mr-2" />
-              Publish Destination
+              <Share className="w-3 h-3 mr-2" />
+              Publish Destinations
             </Button>
           </div>
 
