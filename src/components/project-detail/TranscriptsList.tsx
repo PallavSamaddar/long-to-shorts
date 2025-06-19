@@ -1,5 +1,5 @@
 
-import React, { useImperativeHandle, forwardRef, useRef, useCallback } from 'react';
+import React, { useImperativeHandle, forwardRef, useRef, useState, useCallback } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { transcripts } from '@/data/projectDetailData';
 
@@ -12,9 +12,17 @@ export interface TranscriptsListRef {
   scrollToTranscript: (index: number) => void;
 }
 
+interface TextSelection {
+  segmentIndex: number;
+  startOffset: number;
+  endOffset: number;
+  selectedText: string;
+}
+
 const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
   ({ selectedTranscript, onTranscriptSelect }, ref) => {
     const transcriptRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const [textSelection, setTextSelection] = useState<TextSelection | null>(null);
 
     useImperativeHandle(ref, () => ({
       scrollToTranscript: (index: number) => {
@@ -50,22 +58,60 @@ const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
       }
 
       const range = selection.getRangeAt(0);
+      const selectedText = selection.toString().trim();
       
-      // Find which transcript segment contains the start of the selection
+      if (!selectedText) return;
+
+      // Find which transcript segment contains the selection
       let segmentIndex = -1;
       for (let i = 0; i < transcriptRefs.current.length; i++) {
         const element = transcriptRefs.current[i];
-        if (element && element.contains(range.startContainer)) {
+        if (element && element.contains(range.commonAncestorContainer)) {
           segmentIndex = i;
           break;
         }
       }
 
-      // If we found a segment, trigger the callback to update the selected transcript
       if (segmentIndex !== -1) {
-        onTranscriptSelect(segmentIndex);
+        // Get the text content of the segment to calculate offsets
+        const segmentElement = transcriptRefs.current[segmentIndex];
+        const textElement = segmentElement?.querySelector('p');
+        if (textElement) {
+          const fullText = textElement.textContent || '';
+          const startOffset = fullText.indexOf(selectedText);
+          const endOffset = startOffset + selectedText.length;
+
+          setTextSelection({
+            segmentIndex,
+            startOffset,
+            endOffset,
+            selectedText
+          });
+
+          // Trigger the existing callback to update the selected transcript
+          onTranscriptSelect(segmentIndex);
+        }
       }
     }, [onTranscriptSelect]);
+
+    const renderHighlightedText = (text: string, segmentIndex: number) => {
+      if (!textSelection || textSelection.segmentIndex !== segmentIndex) {
+        return text;
+      }
+
+      const { startOffset, endOffset } = textSelection;
+      const beforeSelection = text.slice(0, startOffset);
+      const selectedText = text.slice(startOffset, endOffset);
+      const afterSelection = text.slice(endOffset);
+
+      return (
+        <>
+          {beforeSelection}
+          <span className="bg-yellow-300">{selectedText}</span>
+          {afterSelection}
+        </>
+      );
+    };
 
     return (
       <div className="w-[40%] bg-white border-r border-slate-200 flex flex-col h-full">
@@ -81,18 +127,14 @@ const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
                     key={index}
                     ref={(el) => (transcriptRefs.current[index] = el)}
                     onClick={() => onTranscriptSelect(index)}
-                    className={`p-4 rounded-lg cursor-pointer transition-all ${
-                      selectedTranscript === index
-                        ? 'bg-yellow-100 border-2 border-yellow-300'
-                        : 'hover:bg-slate-50 border border-transparent'
-                    }`}
+                    className="p-4 rounded-lg cursor-pointer transition-all hover:bg-slate-50"
                   >
                     <div className="flex flex-col gap-2">
                       <span className="text-xs font-mono text-slate-500 select-none">
                         {generateTimestamp(index)}
                       </span>
                       <p className="text-slate-700 leading-relaxed text-sm">
-                        {transcript}
+                        {renderHighlightedText(transcript, index)}
                       </p>
                     </div>
                   </div>
