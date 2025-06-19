@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ProjectDetailHeader from '@/components/project-detail/ProjectDetailHeader';
@@ -68,6 +69,7 @@ const ProjectDetail = () => {
           <TranscriptsList
             ref={transcriptsRef}
             selectedTranscript={selectedTranscript}
+            selectedScene={selectedScene}
             onTranscriptSelect={handleTranscriptSelect}
           />
           

@@ -1,10 +1,11 @@
 
-import React, { useImperativeHandle, forwardRef, useRef, useState, useCallback } from 'react';
+import React, { useImperativeHandle, forwardRef, useRef, useState, useCallback, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { transcripts } from '@/data/projectDetailData';
 
 interface TranscriptsListProps {
   selectedTranscript: number;
+  selectedScene: number;
   onTranscriptSelect: (index: number) => void;
 }
 
@@ -19,10 +20,29 @@ interface TextSelection {
   selectedText: string;
 }
 
+// Predefined highlights for each scene
+const sceneHighlights = [
+  { segmentIndex: 0, startOffset: 85, endOffset: 145, selectedText: "artificial intelligence has brought to various industries" },
+  { segmentIndex: 1, startOffset: 0, endOffset: 45, selectedText: "Machine learning algorithms have become" },
+  { segmentIndex: 2, startOffset: 30, endOffset: 85, selectedText: "AI in everyday applications has transformed user" },
+  { segmentIndex: 3, startOffset: 0, endOffset: 55, selectedText: "Natural language processing has reached new heights" },
+  { segmentIndex: 4, startOffset: 0, endOffset: 45, selectedText: "Computer vision technology has advanced" },
+  { segmentIndex: 5, startOffset: 4, endOffset: 65, selectedText: "ethical considerations surrounding AI development" },
+  { segmentIndex: 6, startOffset: 0, endOffset: 50, selectedText: "Artificial intelligence is transforming the healthcare" }
+];
+
 const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
-  ({ selectedTranscript, onTranscriptSelect }, ref) => {
+  ({ selectedTranscript, selectedScene, onTranscriptSelect }, ref) => {
     const transcriptRefs = useRef<(HTMLDivElement | null)[]>([]);
     const [textSelection, setTextSelection] = useState<TextSelection | null>(null);
+
+    // Set default highlight based on selected scene
+    useEffect(() => {
+      const sceneHighlight = sceneHighlights[selectedScene % sceneHighlights.length];
+      if (sceneHighlight) {
+        setTextSelection(sceneHighlight);
+      }
+    }, [selectedScene]);
 
     useImperativeHandle(ref, () => ({
       scrollToTranscript: (index: number) => {
