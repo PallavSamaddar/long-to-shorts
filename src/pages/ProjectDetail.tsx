@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ProjectDetailHeader from '@/components/project-detail/ProjectDetailHeader';
@@ -6,7 +5,7 @@ import ScenesList from '@/components/project-detail/ScenesList';
 import TranscriptsList from '@/components/project-detail/TranscriptsList';
 import VideoPlayer from '@/components/project-detail/VideoPlayer';
 import VideoController from '@/components/project-detail/VideoController';
-import { scenes } from '@/data/projectDetailData';
+import { scenes, transcripts } from '@/data/projectDetailData';
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -19,6 +18,9 @@ const ProjectDetail = () => {
 
   const handleSceneSelect = (index: number) => {
     setSelectedScene(index);
+    // Randomly select a different transcript when scene changes
+    const randomTranscriptIndex = Math.floor(Math.random() * transcripts.length);
+    setSelectedTranscript(randomTranscriptIndex);
   };
 
   const handleTranscriptSelect = (index: number) => {
