@@ -28,6 +28,21 @@ const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
       }
     }));
 
+    // Generate timestamps for each transcript segment
+    const generateTimestamp = (index: number) => {
+      const startSeconds = index * 15; // 15 seconds per segment
+      const endSeconds = (index + 1) * 15;
+      
+      const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        const milliseconds = Math.floor(Math.random() * 999); // Random milliseconds for variety
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
+      };
+
+      return `${formatTime(startSeconds)} --> ${formatTime(endSeconds)}`;
+    };
+
     return (
       <div className="w-[40%] bg-white border-r border-slate-200 flex flex-col h-full">
         <div className="p-4 border-b border-slate-200 flex-shrink-0">
@@ -48,9 +63,9 @@ const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
                         : 'hover:bg-slate-50 border border-transparent'
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <span className="text-sm font-medium text-slate-500 min-w-[24px]">
-                        {index + 1}.
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs font-mono text-slate-500">
+                        {generateTimestamp(index)}
                       </span>
                       <p className="text-slate-700 leading-relaxed text-sm">
                         {transcript}
