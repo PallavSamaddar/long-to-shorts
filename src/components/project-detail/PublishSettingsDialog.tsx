@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,7 +21,6 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
-  const { id } = useParams();
 
   // Mock YouTube destinations from settings
   const youtubeDestinations = [
@@ -53,8 +51,8 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
           setTimeout(() => {
             setIsProcessing(false);
             onPublish();
-            // Navigate back to the project page
-            navigate(`/projects/${id}`);
+            // Navigate to the projects page
+            navigate('/projects');
           }, 500);
           return 100;
         }
