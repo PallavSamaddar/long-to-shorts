@@ -1,21 +1,24 @@
 
 import React, { useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ProjectDetailHeader from '@/components/project-detail/ProjectDetailHeader';
 import ScenesList from '@/components/project-detail/ScenesList';
 import TranscriptsList, { TranscriptsListRef } from '@/components/project-detail/TranscriptsList';
 import VideoPlayer from '@/components/project-detail/VideoPlayer';
 import VideoController from '@/components/project-detail/VideoController';
+import PublishSettingsDialog from '@/components/project-detail/PublishSettingsDialog';
 import { scenes, transcripts } from '@/data/projectDetailData';
 
 const ProjectDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [selectedScene, setSelectedScene] = useState(0);
   const [selectedTranscript, setSelectedTranscript] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState("00:00:00");
   const [totalTime] = useState("00:12:34");
+  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   
   const transcriptsRef = useRef<TranscriptsListRef>(null);
 
@@ -55,6 +58,16 @@ const ProjectDetail = () => {
     setIsMuted(!isMuted);
   };
 
+  const handlePublishAllScenes = () => {
+    setIsPublishDialogOpen(true);
+  };
+
+  const handlePublishComplete = () => {
+    setIsPublishDialogOpen(false);
+    // Navigate to home page
+    navigate('/');
+  };
+
   return (
     <div className="h-screen bg-slate-50 flex flex-col w-full overflow-hidden">
       <ProjectDetailHeader />
@@ -87,6 +100,13 @@ const ProjectDetail = () => {
         onNextScene={handleNextScene}
         onTogglePlayPause={togglePlayPause}
         onToggleMute={toggleMute}
+        onPublishAllScenes={handlePublishAllScenes}
+      />
+
+      <PublishSettingsDialog
+        isOpen={isPublishDialogOpen}
+        onClose={() => setIsPublishDialogOpen(false)}
+        onPublish={handlePublishComplete}
       />
     </div>
   );

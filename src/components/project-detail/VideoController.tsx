@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { scenes } from '@/data/projectDetailData';
 
@@ -14,9 +14,10 @@ interface VideoControllerProps {
   onNextScene: () => void;
   onTogglePlayPause: () => void;
   onToggleMute: () => void;
+  onPublishAllScenes: () => void;
 }
 
-const VideoController = ({
+const VideoController: React.FC<VideoControllerProps> = ({
   selectedScene,
   isPlaying,
   isMuted,
@@ -25,66 +26,75 @@ const VideoController = ({
   onPreviousScene,
   onNextScene,
   onTogglePlayPause,
-  onToggleMute
-}: VideoControllerProps) => {
+  onToggleMute,
+  onPublishAllScenes
+}) => {
   return (
     <div className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
-      <div className="flex items-center justify-between">
-        {/* Left side controls */}
+      <div className="flex items-center justify-between max-w-6xl mx-auto">
+        {/* Left side - Scene navigation */}
         <div className="flex items-center gap-4">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onPreviousScene}
             disabled={selectedScene === 0}
+            className="flex items-center gap-2"
           >
             <SkipBack className="w-4 h-4" />
+            Previous Scene
           </Button>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onTogglePlayPause}
-          >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          </Button>
+          <span className="text-sm text-slate-600">
+            Scene {selectedScene + 1} of {scenes.length}
+          </span>
           
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onNextScene}
             disabled={selectedScene === scenes.length - 1}
+            className="flex items-center gap-2"
           >
+            Next Scene
             <SkipForward className="w-4 h-4" />
           </Button>
-          
+        </div>
+
+        {/* Center - Playback controls */}
+        <div className="flex items-center gap-4">
           <Button
-            variant="ghost"
+            variant="outline"
+            size="sm"
+            onClick={onTogglePlayPause}
+            className="flex items-center gap-2"
+          >
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {isPlaying ? 'Pause' : 'Play'}
+          </Button>
+
+          <Button
+            variant="outline"
             size="sm"
             onClick={onToggleMute}
+            className="flex items-center gap-2"
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            {isMuted ? 'Unmute' : 'Mute'}
           </Button>
+
+          <span className="text-sm text-slate-600 font-mono">
+            {currentTime} / {totalTime}
+          </span>
         </div>
 
-        {/* Center: Time and Seekbar */}
-        <div className="flex-1 flex items-center gap-4 mx-8">
-          <span className="text-sm text-slate-600">{currentTime}</span>
-          <div className="flex-1 bg-slate-200 rounded-full h-2">
-            <div className="bg-blue-600 h-2 rounded-full w-1/4"></div>
-          </div>
-          <span className="text-sm text-slate-600">{totalTime}</span>
-        </div>
-
-        {/* Right side CTAs */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            Settings
-          </Button>
-          <Button variant="outline" size="sm">
-            Save Scene
-          </Button>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+        {/* Right side - Publish button */}
+        <div className="flex items-center">
+          <Button
+            onClick={onPublishAllScenes}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Upload className="w-4 h-4" />
             Publish All Scenes
           </Button>
         </div>
