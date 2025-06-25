@@ -2,6 +2,7 @@
 import React from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Upload, Save, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { scenes } from '@/data/projectDetailData';
 
 interface VideoControllerProps {
@@ -33,6 +34,22 @@ const VideoController: React.FC<VideoControllerProps> = ({
   onSave,
   onReset
 }) => {
+  // Convert time strings to seconds for slider calculation
+  const timeToSeconds = (timeStr: string) => {
+    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+    return hours * 3600 + minutes * 60 + seconds;
+  };
+
+  const currentSeconds = timeToSeconds(currentTime);
+  const totalSeconds = timeToSeconds(totalTime);
+  const progress = totalSeconds > 0 ? (currentSeconds / totalSeconds) * 100 : 0;
+
+  const handleSeek = (value: number[]) => {
+    const seekTime = (value[0] / 100) * totalSeconds;
+    console.log(`Seeking to ${seekTime} seconds`);
+    // TODO: Implement actual seek functionality
+  };
+
   return (
     <div className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
       <div className="flex items-center justify-between max-w-6xl mx-auto">
@@ -61,8 +78,8 @@ const VideoController: React.FC<VideoControllerProps> = ({
           </Button>
         </div>
 
-        {/* Center - Playback controls */}
-        <div className="flex items-center gap-4">
+        {/* Center - Playback controls and seekbar */}
+        <div className="flex items-center gap-4 flex-1 max-w-md mx-6">
           <Button
             variant="outline"
             size="sm"
@@ -83,9 +100,23 @@ const VideoController: React.FC<VideoControllerProps> = ({
             {isMuted ? 'Unmute' : 'Mute'}
           </Button>
 
-          <span className="text-sm text-slate-600 font-mono">
-            {currentTime} / {totalTime}
-          </span>
+          <div className="flex items-center gap-3 flex-1">
+            <span className="text-xs text-slate-600 font-mono whitespace-nowrap">
+              {currentTime}
+            </span>
+            
+            <Slider
+              value={[progress]}
+              onValueChange={handleSeek}
+              max={100}
+              step={0.1}
+              className="flex-1"
+            />
+            
+            <span className="text-xs text-slate-600 font-mono whitespace-nowrap">
+              {totalTime}
+            </span>
+          </div>
         </div>
 
         {/* Right side - Action buttons */}
