@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProjectDetailHeader from '@/components/project-detail/ProjectDetailHeader';
@@ -68,6 +67,16 @@ const ProjectDetail = () => {
     navigate('/');
   };
 
+  const handleSave = () => {
+    console.log('Saving project...');
+    // Add save functionality here
+  };
+
+  const handleReset = () => {
+    console.log('Resetting project...');
+    // Add reset functionality here
+  };
+
   return (
     <div className="h-screen bg-slate-50 flex flex-col w-full overflow-hidden">
       <ProjectDetailHeader />
@@ -101,6 +110,8 @@ const ProjectDetail = () => {
         onTogglePlayPause={togglePlayPause}
         onToggleMute={toggleMute}
         onPublishAllScenes={handlePublishAllScenes}
+        onSave={handleSave}
+        onReset={handleReset}
       />
 
       <PublishSettingsDialog

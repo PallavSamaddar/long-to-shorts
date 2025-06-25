@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Upload } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Upload, Save, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { scenes } from '@/data/projectDetailData';
 
@@ -15,6 +15,8 @@ interface VideoControllerProps {
   onTogglePlayPause: () => void;
   onToggleMute: () => void;
   onPublishAllScenes: () => void;
+  onSave: () => void;
+  onReset: () => void;
 }
 
 const VideoController: React.FC<VideoControllerProps> = ({
@@ -27,7 +29,9 @@ const VideoController: React.FC<VideoControllerProps> = ({
   onNextScene,
   onTogglePlayPause,
   onToggleMute,
-  onPublishAllScenes
+  onPublishAllScenes,
+  onSave,
+  onReset
 }) => {
   return (
     <div className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
@@ -88,14 +92,32 @@ const VideoController: React.FC<VideoControllerProps> = ({
           </span>
         </div>
 
-        {/* Right side - Publish button */}
-        <div className="flex items-center">
+        {/* Right side - Action buttons */}
+        <div className="flex items-center gap-2">
           <Button
             onClick={onPublishAllScenes}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Upload className="w-4 h-4" />
             Publish All Scenes
+          </Button>
+          
+          <Button
+            onClick={onSave}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            Save
+          </Button>
+          
+          <Button
+            onClick={onReset}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset
           </Button>
         </div>
       </div>
