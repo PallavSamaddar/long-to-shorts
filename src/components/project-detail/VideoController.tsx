@@ -43,10 +43,8 @@ const VideoController: React.FC<VideoControllerProps> = ({
             size="sm"
             onClick={onPreviousScene}
             disabled={selectedScene === 0}
-            className="flex items-center gap-2"
           >
             <SkipBack className="w-4 h-4" />
-            Previous Scene
           </Button>
           
           <span className="text-sm text-slate-600">
@@ -58,9 +56,7 @@ const VideoController: React.FC<VideoControllerProps> = ({
             size="sm"
             onClick={onNextScene}
             disabled={selectedScene === scenes.length - 1}
-            className="flex items-center gap-2"
           >
-            Next Scene
             <SkipForward className="w-4 h-4" />
           </Button>
         </div>
@@ -95,14 +91,6 @@ const VideoController: React.FC<VideoControllerProps> = ({
         {/* Right side - Action buttons */}
         <div className="flex items-center gap-2">
           <Button
-            onClick={onPublishAllScenes}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Upload className="w-4 h-4" />
-            Publish All Scenes
-          </Button>
-          
-          <Button
             onClick={onSave}
             variant="outline"
             className="flex items-center gap-2"
@@ -118,6 +106,14 @@ const VideoController: React.FC<VideoControllerProps> = ({
           >
             <RotateCcw className="w-4 h-4" />
             Reset
+          </Button>
+          
+          <Button
+            onClick={onPublishAllScenes}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Upload className="w-4 h-4" />
+            Publish All Scenes
           </Button>
         </div>
       </div>
