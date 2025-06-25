@@ -52,9 +52,9 @@ const VideoController: React.FC<VideoControllerProps> = ({
 
   return (
     <div className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
-      <div className="flex items-center justify-between max-w-6xl mx-auto">
-        {/* Left side - Scene navigation */}
-        <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 w-full">
+        {/* Left side - Scene navigation and playback controls */}
+        <div className="flex items-center gap-4 flex-shrink-0">
           <Button
             variant="outline"
             size="sm"
@@ -64,7 +64,7 @@ const VideoController: React.FC<VideoControllerProps> = ({
             <SkipBack className="w-4 h-4" />
           </Button>
           
-          <span className="text-sm text-slate-600">
+          <span className="text-sm text-slate-600 whitespace-nowrap">
             Scene {selectedScene + 1} of {scenes.length}
           </span>
           
@@ -76,72 +76,65 @@ const VideoController: React.FC<VideoControllerProps> = ({
           >
             <SkipForward className="w-4 h-4" />
           </Button>
-        </div>
 
-        {/* Center - Playback controls and seekbar */}
-        <div className="flex items-center gap-4 flex-1 max-w-md mx-6">
           <Button
             variant="outline"
             size="sm"
             onClick={onTogglePlayPause}
-            className="flex items-center gap-2"
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {isPlaying ? 'Pause' : 'Play'}
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={onToggleMute}
-            className="flex items-center gap-2"
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            {isMuted ? 'Unmute' : 'Mute'}
           </Button>
+        </div>
 
-          <div className="flex items-center gap-3 flex-1">
-            <span className="text-xs text-slate-600 font-mono whitespace-nowrap">
-              {currentTime}
-            </span>
-            
-            <Slider
-              value={[progress]}
-              onValueChange={handleSeek}
-              max={100}
-              step={0.1}
-              className="flex-1"
-            />
-            
-            <span className="text-xs text-slate-600 font-mono whitespace-nowrap">
-              {totalTime}
-            </span>
-          </div>
+        {/* Center - Responsive seekbar */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-xs text-slate-600 font-mono whitespace-nowrap flex-shrink-0">
+            {currentTime}
+          </span>
+          
+          <Slider
+            value={[progress]}
+            onValueChange={handleSeek}
+            max={100}
+            step={0.1}
+            className="flex-1 min-w-0"
+          />
+          
+          <span className="text-xs text-slate-600 font-mono whitespace-nowrap flex-shrink-0">
+            {totalTime}
+          </span>
         </div>
 
         {/* Right side - Action buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button
             onClick={onSave}
             variant="outline"
-            className="flex items-center gap-2"
+            size="sm"
           >
             <Save className="w-4 h-4" />
-            Save
           </Button>
           
           <Button
             onClick={onReset}
             variant="outline"
-            className="flex items-center gap-2"
+            size="sm"
           >
             <RotateCcw className="w-4 h-4" />
-            Reset
           </Button>
           
           <Button
             onClick={onPublishAllScenes}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Upload className="w-4 h-4" />
             Publish All Scenes
