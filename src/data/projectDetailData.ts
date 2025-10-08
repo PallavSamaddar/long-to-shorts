@@ -1,12 +1,47 @@
 
 export const scenes = [
-  { id: 1, thumbnail: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=150&h=100&fit=crop', duration: '2:30' },
-  { id: 2, thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=150&h=100&fit=crop', duration: '3:45' },
-  { id: 3, thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=150&h=100&fit=crop', duration: '1:50' },
-  { id: 4, thumbnail: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=150&h=100&fit=crop', duration: '4:29' },
-  { id: 5, thumbnail: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=150&h=100&fit=crop', duration: '2:15' },
-  { id: 6, thumbnail: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=150&h=100&fit=crop', duration: '3:20' },
-  { id: 7, thumbnail: 'https://images.unsplash.com/photo-1611532736542-dfa22be3f816?w=150&h=100&fit=crop', duration: '2:45' },
+  { 
+    id: 1, 
+    thumbnail: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=450&fit=crop&q=90', 
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    duration: '2:30' 
+  },
+  { 
+    id: 2, 
+    thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=450&fit=crop&q=90', 
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    duration: '3:45' 
+  },
+  { 
+    id: 3, 
+    thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=450&fit=crop&q=90', 
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    duration: '1:50' 
+  },
+  { 
+    id: 4, 
+    thumbnail: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=450&fit=crop&q=90', 
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    duration: '4:29' 
+  },
+  { 
+    id: 5, 
+    thumbnail: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&h=450&fit=crop&q=90', 
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    duration: '2:15' 
+  },
+  { 
+    id: 6, 
+    thumbnail: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=450&fit=crop&q=90', 
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    duration: '3:20' 
+  },
+  { 
+    id: 7, 
+    thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=450&fit=crop&q=90', 
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    duration: '2:45' 
+  },
 ];
 
 export const transcripts = [

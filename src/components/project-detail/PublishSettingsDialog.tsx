@@ -4,75 +4,95 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Youtube, Globe } from 'lucide-react';
+import { Upload, Youtube, Globe, Instagram, Twitter, Facebook, Linkedin, Twitch,  Twitter as X } from 'lucide-react';
 
 interface PublishSettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onPublish: () => void;
 }
 
-const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
-  isOpen,
-  onClose,
-  onPublish
-}) => {
+const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ isOpen, onClose }) => {
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>(['slike']);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
-  // Mock YouTube destinations from settings
-  const youtubeDestinations = [
-    { id: 'channel1', name: 'Tech Reviews Channel', subscribers: '15.2K' },
-    { id: 'channel2', name: 'Educational Content', subscribers: '8.7K' },
-    { id: 'channel3', name: 'Personal Vlogs', subscribers: '3.1K' }
-  ];
+  // All publishing destinations organized by category
+  const publishDestinations = {
+    socialMedia: [
+      { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'text-pink-600', description: 'Instagram Feed & Stories' },
+      { id: 'twitter', name: 'Twitter/X', icon: X, color: 'text-gray-900', description: 'Social media posts' },
+      { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'text-blue-600', description: 'Facebook videos & posts' },
+      { id: 'meta', name: 'Meta', icon: Facebook, color: 'text-blue-700', description: 'Meta platforms integration' },
+      { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'text-blue-700', description: 'Professional content' },
+      { id: 'snapchat', name: 'Snapchat', icon: Globe, color: 'text-yellow-500', description: 'Snapchat Stories & Spotlight' },
+      { id: 'pinterest', name: 'Pinterest', icon: Globe, color: 'text-red-600', description: 'Visual discovery platform' }
+    ],
+    videoPlatforms: [
+      { id: 'youtube1', name: 'Tech Reviews Channel', icon: Youtube, color: 'text-red-600', description: '15.2K subscribers' },
+      { id: 'youtube2', name: 'Educational Content', icon: Youtube, color: 'text-red-600', description: '8.7K subscribers' },
+      { id: 'youtube3', name: 'Personal Vlogs', icon: Youtube, color: 'text-red-600', description: '3.1K subscribers' },
+      { id: 'twitch', name: 'Twitch', icon: Twitch, color: 'text-purple-600', description: 'Live streaming platform' }
+    ],
+    generalPlatforms: [
+      { id: 'slike', name: 'Slike', icon: Globe, color: 'text-gray-700', description: 'General publishing platform' },
+      { id: 'dailymotion', name: 'Dailymotion', icon: Globe, color: 'text-blue-600', description: 'Video sharing platform' },
+      { id: 'rumble', name: 'Rumble', icon: Globe, color: 'text-green-600', description: 'Independent video platform' },
+      { id: 'odysee', name: 'Odysee', icon: Globe, color: 'text-orange-600', description: 'Decentralized video platform' }
+    ]
+  };
 
-  const handleDestinationToggle = (destination: string) => {
+  const handleDestinationToggle = (destinationId: string) => {
     setSelectedDestinations(prev => 
-      prev.includes(destination)
-        ? prev.filter(d => d !== destination)
-        : [...prev, destination]
+      prev.includes(destinationId) 
+        ? prev.filter(id => id !== destinationId)
+        : [...prev, destinationId]
     );
   };
 
   const handlePublish = async () => {
-    if (selectedDestinations.length === 0) return;
-
     setIsProcessing(true);
     setProgress(0);
 
-    // Simulate processing with progress updates
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsProcessing(false);
-            onPublish();
-            // Navigate to the projects page
-            navigate('/projects');
-          }, 500);
-          return 100;
-        }
-        return prev + 25;
-      });
-    }, 1000);
+    // Simulate publishing process
+    for (let i = 0; i <= 100; i += 10) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      setProgress(i);
+    }
+
+    setIsProcessing(false);
+    onClose();
+    navigate('/projects');
+  };
+
+  const getCategoryTitle = (category: keyof typeof publishDestinations) => {
+    switch (category) {
+      case 'socialMedia':
+        return 'Social Media Platforms';
+      case 'videoPlatforms':
+        return 'Video Platforms';
+      case 'generalPlatforms':
+        return 'General Platforms';
+      default:
+        return 'Platforms';
+    }
   };
 
   if (isProcessing) {
     return (
-      <Dialog open={isOpen} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md">
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <h3 className="text-lg font-semibold mb-2">Processing Videos</h3>
-            <p className="text-sm text-slate-600 text-center mb-4">
-              Your videos are processing, all videos will be available under PUBLISHED FILES
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              Publishing Videos...
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Progress value={progress} className="w-full" />
+            <p className="text-sm text-gray-600 text-center">
+              Uploading to {selectedDestinations.length} destination{selectedDestinations.length !== 1 ? 's' : ''}... {progress}%
             </p>
-            <Progress value={progress} className="w-full max-w-xs" />
-            <p className="text-xs text-slate-500 mt-2">{progress}% complete</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -81,7 +101,7 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
@@ -89,63 +109,112 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 max-h-96 overflow-y-auto">
+          {/* Social Media Platforms */}
           <div>
-            <h4 className="text-sm font-medium mb-3">Publish Destinations</h4>
-            
-            {/* Slike Destination */}
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50">
-                <Checkbox
-                  id="slike"
-                  checked={selectedDestinations.includes('slike')}
-                  onCheckedChange={() => handleDestinationToggle('slike')}
-                />
-                <div className="flex items-center gap-2 flex-1">
-                  <Globe className="w-4 h-4 text-blue-600" />
-                  <label htmlFor="slike" className="text-sm font-medium cursor-pointer">
-                    Slike
-                  </label>
-                </div>
-              </div>
-
-              {/* YouTube Destinations */}
-              <div className="space-y-2">
-                <p className="text-sm text-slate-600 font-medium">YouTube Destinations</p>
-                {youtubeDestinations.map((channel) => (
-                  <div key={channel.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50">
+            <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('socialMedia')}</h3>
+            <div className="grid grid-cols-1 gap-3">
+              {publishDestinations.socialMedia.map((destination) => {
+                const IconComponent = destination.icon;
+                return (
+                  <div
+                    key={destination.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
                     <Checkbox
-                      id={channel.id}
-                      checked={selectedDestinations.includes(channel.id)}
-                      onCheckedChange={() => handleDestinationToggle(channel.id)}
+                      id={destination.id}
+                      checked={selectedDestinations.includes(destination.id)}
+                      onCheckedChange={() => handleDestinationToggle(destination.id)}
                     />
-                    <div className="flex items-center gap-2 flex-1">
-                      <Youtube className="w-4 h-4 text-red-600" />
+                    <div className="flex items-center space-x-3 flex-1">
+                      <IconComponent className={`w-5 h-5 ${destination.color}`} />
                       <div className="flex-1">
-                        <label htmlFor={channel.id} className="text-sm font-medium cursor-pointer block">
-                          {channel.name}
+                        <label htmlFor={destination.id} className="text-sm font-medium text-gray-900 cursor-pointer">
+                          {destination.name}
                         </label>
-                        <p className="text-xs text-slate-500">{channel.subscribers} subscribers</p>
+                        <p className="text-xs text-gray-500">{destination.description}</p>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handlePublish}
-              disabled={selectedDestinations.length === 0}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Publish ({selectedDestinations.length} destination{selectedDestinations.length !== 1 ? 's' : ''})
-            </Button>
+          {/* Video Platforms */}
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('videoPlatforms')}</h3>
+            <div className="grid grid-cols-1 gap-3">
+              {publishDestinations.videoPlatforms.map((destination) => {
+                const IconComponent = destination.icon;
+                return (
+                  <div
+                    key={destination.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
+                    <Checkbox
+                      id={destination.id}
+                      checked={selectedDestinations.includes(destination.id)}
+                      onCheckedChange={() => handleDestinationToggle(destination.id)}
+                    />
+                    <div className="flex items-center space-x-3 flex-1">
+                      <IconComponent className={`w-5 h-5 ${destination.color}`} />
+                      <div className="flex-1">
+                        <label htmlFor={destination.id} className="text-sm font-medium text-gray-900 cursor-pointer">
+                          {destination.name}
+                        </label>
+                        <p className="text-xs text-gray-500">{destination.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
+          {/* General Platforms */}
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('generalPlatforms')}</h3>
+            <div className="grid grid-cols-1 gap-3">
+              {publishDestinations.generalPlatforms.map((destination) => {
+                const IconComponent = destination.icon;
+                return (
+                  <div
+                    key={destination.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
+                    <Checkbox
+                      id={destination.id}
+                      checked={selectedDestinations.includes(destination.id)}
+                      onCheckedChange={() => handleDestinationToggle(destination.id)}
+                    />
+                    <div className="flex items-center space-x-3 flex-1">
+                      <IconComponent className={`w-5 h-5 ${destination.color}`} />
+                      <div className="flex-1">
+                        <label htmlFor={destination.id} className="text-sm font-medium text-gray-900 cursor-pointer">
+                          {destination.name}
+                        </label>
+                        <p className="text-xs text-gray-500">{destination.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handlePublish}
+            disabled={selectedDestinations.length === 0}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Publish ({selectedDestinations.length} destination{selectedDestinations.length !== 1 ? 's' : ''})
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

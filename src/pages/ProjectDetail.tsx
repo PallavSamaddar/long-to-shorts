@@ -13,10 +13,6 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const [selectedScene, setSelectedScene] = useState(0);
   const [selectedTranscript, setSelectedTranscript] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState("00:00:00");
-  const [totalTime] = useState("00:12:34");
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   
   const transcriptsRef = useRef<TranscriptsListRef>(null);
@@ -49,13 +45,6 @@ const ProjectDetail = () => {
     }
   };
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
 
   const handlePublishAllScenes = () => {
     setIsPublishDialogOpen(true);
@@ -101,14 +90,8 @@ const ProjectDetail = () => {
 
       <VideoController
         selectedScene={selectedScene}
-        isPlaying={isPlaying}
-        isMuted={isMuted}
-        currentTime={currentTime}
-        totalTime={totalTime}
         onPreviousScene={handlePreviousScene}
         onNextScene={handleNextScene}
-        onTogglePlayPause={togglePlayPause}
-        onToggleMute={toggleMute}
         onPublishAllScenes={handlePublishAllScenes}
         onSave={handleSave}
         onReset={handleReset}
