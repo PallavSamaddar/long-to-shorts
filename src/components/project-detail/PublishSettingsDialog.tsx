@@ -115,13 +115,15 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="!max-w-[90vw] !w-[90vw] sm:!max-w-2xl sm:!w-full max-h-[80vh] overflow-hidden"
+        className="!max-w-[85vw] !w-[85vw] sm:!max-w-xl sm:!w-full max-h-[80vh] overflow-hidden mx-4 sm:mx-auto"
         style={{ 
-          maxWidth: '90vw !important',
-          width: '90vw !important',
+          maxWidth: '85vw !important',
+          width: '85vw !important',
           left: '50% !important',
           top: '50% !important',
-          transform: 'translate(-50%, -50%) !important'
+          transform: 'translate(-50%, -50%) !important',
+          marginLeft: 'auto !important',
+          marginRight: 'auto !important'
         }}
       >
         <DialogHeader>
@@ -171,7 +173,7 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
           </RadioGroup>
         </div>
 
-        <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
+        <div className="space-y-6 max-h-96 overflow-y-auto pr-4">
           {/* Social Media Platforms */}
           <div>
             <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('socialMedia')}</h3>

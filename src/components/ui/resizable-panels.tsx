@@ -3,9 +3,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ResizablePanelsProps {
   children: [ReactNode, ReactNode, ReactNode]; // Left, Middle, Right
+  onLeftPanelCollapse?: (isCollapsed: boolean) => void;
 }
 
-export const ResizablePanels: React.FC<ResizablePanelsProps> = ({ children }) => {
+export const ResizablePanels: React.FC<ResizablePanelsProps> = ({ children, onLeftPanelCollapse }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
   const [middleWidth, setMiddleWidth] = useState(400);
@@ -64,7 +65,22 @@ export const ResizablePanels: React.FC<ResizablePanelsProps> = ({ children }) =>
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   return (
-    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
+    <div ref={containerRef} className="flex h-full w-full overflow-hidden relative">
+      {/* Floating Expand Button - Only visible when collapsed, outside of collapsed container */}
+      {isLeftPanelCollapsed && (
+        <button
+          onClick={() => {
+            const newState = !isLeftPanelCollapsed;
+            setIsLeftPanelCollapsed(newState);
+            onLeftPanelCollapse?.(newState);
+          }}
+          className="absolute top-4 left-4 z-30 bg-white border border-slate-300 rounded-full p-1 shadow-md hover:shadow-lg transition-all duration-200 hover:bg-slate-50"
+          title="Show Scenes Panel"
+        >
+          <ChevronRight className="w-4 h-4 text-slate-600" />
+        </button>
+      )}
+
       {/* Left Panel - Fixed width with collapse/expand */}
       <div 
         className={`relative flex-shrink-0 transition-all duration-300 ${
@@ -73,26 +89,17 @@ export const ResizablePanels: React.FC<ResizablePanelsProps> = ({ children }) =>
         style={{ width: isLeftPanelCollapsed ? '0px' : `${leftPanelWidth}px` }}
       >
         <div className={`h-full ${isLeftPanelCollapsed ? 'opacity-0' : 'opacity-100'}`}>
-          {children[0]}
+          {React.cloneElement(children[0] as React.ReactElement, {
+            isLeftPanelCollapsed,
+            onToggleLeftPanel: () => {
+              const newState = !isLeftPanelCollapsed;
+              setIsLeftPanelCollapsed(newState);
+              onLeftPanelCollapse?.(newState);
+            }
+          })}
         </div>
       </div>
       
-      {/* Collapse/Expand Button - Always visible */}
-      <button
-        onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
-        className="absolute top-4 z-30 bg-white border border-slate-300 rounded-full p-1 shadow-md hover:shadow-lg transition-all duration-200 hover:bg-slate-50"
-        style={{ 
-          width: '24px', 
-          height: '24px',
-          left: isLeftPanelCollapsed ? '8px' : `${leftPanelWidth - 16}px`
-        }}
-      >
-        {isLeftPanelCollapsed ? (
-          <ChevronRight className="w-3 h-3 text-slate-600" />
-        ) : (
-          <ChevronLeft className="w-3 h-3 text-slate-600" />
-        )}
-      </button>
       
       {/* Middle Panel - Resizable */}
       <div 

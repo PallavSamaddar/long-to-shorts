@@ -99,9 +99,8 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
     <div className="w-full bg-white border-r border-slate-200 flex flex-col h-full">
       {/* Header */}
         <div className="p-4 border-b border-slate-200 flex-shrink-0">
-        <div>
+        <div className="text-center">
           <h3 className="text-lg font-semibold text-slate-900">Transcript</h3>
-          <p className="text-xs text-slate-500 mt-1">Scene {selectedScene + 1} • Full Script Below</p>
         </div>
       </div>
 
@@ -110,12 +109,22 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
         <div className="p-4 h-full flex flex-col">
           {/* Current Scene Transcript - Directly Editable */}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex-shrink-0">
-            <h4 className="text-sm font-semibold text-slate-700 mb-3">Current Scene Transcript:</h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-slate-700">Current Transcript:</h4>
+              <Button
+                onClick={handleSaveCurrentScene}
+                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 h-7"
+                size="sm"
+              >
+                <Save className="w-3 h-3 mr-1" />
+                <span className="text-xs">Update</span>
+              </Button>
+            </div>
             <textarea
               value={transcriptText}
               onChange={handleTranscriptChange}
               placeholder="Enter transcript text for this scene..."
-              className="w-full p-3 border border-slate-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-full p-3 border border-slate-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-left"
               style={{
                 fontSize: '14px',
                 lineHeight: '1.6',
@@ -123,16 +132,6 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
                 height: `${currentSceneHeight}px`
               }}
             />
-            <div className="flex justify-end mt-3">
-              <Button
-                onClick={handleSaveCurrentScene}
-                className="bg-green-600 hover:bg-green-700 text-white"
-                size="sm"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Update Script
-              </Button>
-            </div>
           </div>
 
           {/* Resizable Divider */}
@@ -146,23 +145,22 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
           {/* Full Video Script - Read-only for Reference */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex-1 flex flex-col min-h-0">
             <h4 className="text-sm font-semibold text-blue-700 mb-3">Full Video Script:</h4>
-            <p className="text-xs text-blue-600 mb-3">
-              📋 Copy text from here and paste into the Current Scene Transcript above to edit.
-            </p>
             <textarea
               value={fullScriptText}
               readOnly
               placeholder="Full video script for reference..."
-              className="flex-1 w-full p-3 border border-blue-300 rounded resize-none bg-slate-100 text-slate-700"
+              className="flex-1 w-full p-3 border border-blue-300 rounded resize-none bg-slate-100 text-slate-700 text-left"
               style={{
                 fontSize: '14px',
                 lineHeight: '1.6',
                 fontFamily: 'system-ui, -apple-system, sans-serif'
               }}
             />
-            {/* No Update Script button here - this section is read-only for reference only */}
-          </div>
-        </div>
+            <p className="text-xs text-blue-600 mt-2 flex-shrink-0">
+              Copy and paste into the Current Transcript to edit.
+                      </p>
+                    </div>
+                  </div>
         </div>
       </div>
     );

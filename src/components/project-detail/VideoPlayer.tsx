@@ -3,7 +3,8 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Info, Upload } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Info, Upload, Eye, X } from 'lucide-react';
 import { scenes } from '@/data/projectDetailData';
 import LogoWatermark from './LogoWatermark';
 
@@ -37,7 +38,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     opacity: 50
   });
   const [showLogoSettings, setShowLogoSettings] = useState(false);
+  const [showVerticalPreview, setShowVerticalPreview] = useState(false);
+  const [verticalThumbnail, setVerticalThumbnail] = useState<string | null>(null);
+  const [userThumbnails, setUserThumbnails] = useState<string[]>([]);
+  const [selectedVerticalLayout, setSelectedVerticalLayout] = useState<string>('focused-on-one');
+  const [selectedCaptionStyle, setSelectedCaptionStyle] = useState<string>('none');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const verticalUploadRef = useRef<HTMLInputElement>(null);
+  const thumbnailVideoRef = useRef<HTMLVideoElement>(null);
 
   // Get current scene data
   const currentScene = scenes[selectedScene];
@@ -138,7 +146,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     setPlaybackRate(rate);
   };
 
-  const selectThumbnailFromGallery = () => {
+  const selectThumbnailFromFileUpload = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -212,6 +220,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     input.click();
   };
 
+  const selectThumbnailFromGallery = (thumbnailUrl: string) => {
+    setCustomThumbnail(thumbnailUrl);
+    if (onThumbnailUpdate) {
+      onThumbnailUpdate(selectedScene, thumbnailUrl);
+    }
+  };
+
+  const removeThumbnailFromGallery = (index: number) => {
+    setUserThumbnails(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const selectVerticalLayout = (layout: string) => {
+    setSelectedVerticalLayout(layout);
+    console.log('📱 Selected vertical layout:', layout);
+    // You can add logic here to apply the layout to the vertical video
+  };
+
+  const selectCaptionStyle = (style: string) => {
+    setSelectedCaptionStyle(style);
+    console.log('📝 Selected caption style:', style);
+    // You can add logic here to apply the caption style to the video
+  };
+
   const getCurrentThumbnail = () => {
     // Priority: customThumbnail (local) > updatedThumbnails (parent) > original scene thumbnail
     if (customThumbnail) return customThumbnail;
@@ -220,7 +251,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   };
 
   const captureFrameFromVideo = () => {
-    const video = videoRef.current;
+    const video = thumbnailVideoRef.current || videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) {
       console.warn('❌ Video or canvas ref not available');
@@ -315,7 +346,141 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     // Also update local state
     setCustomThumbnail(thumbnailDataUrl);
     
+    // Add to user's thumbnail collection
+    setUserThumbnails(prev => [...prev, thumbnailDataUrl]);
+    
     return thumbnailDataUrl;
+  };
+
+  const captureVerticalFrameFromVideo = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) {
+      console.warn('❌ Video or canvas ref not available for vertical capture');
+      return null;
+    }
+
+    // Check if video is loaded and has content
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn('❌ Video not loaded yet for vertical capture');
+      return null;
+    }
+
+    console.log('✅ Capturing vertical frame from video dimensions:', video.videoWidth, 'x', video.videoHeight);
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    
+    // For vertical (9:16) aspect ratio
+    const targetRatio = 9 / 16;
+    const videoRatio = videoWidth / videoHeight;
+    
+    let cropWidth = videoWidth;
+    let cropHeight = videoHeight;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    if (videoRatio > targetRatio) {
+      // Video is wider than target, crop width
+      cropWidth = videoHeight * targetRatio;
+      offsetX = (videoWidth - cropWidth) / 2;
+    } else {
+      // Video is taller than target, crop height
+      cropHeight = videoWidth / targetRatio;
+      offsetY = (videoHeight - cropHeight) / 2;
+    }
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
+    
+    // Set white background to prevent black frames
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, cropWidth, cropHeight);
+    
+    // Draw video frame
+    ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+    const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Update vertical thumbnail state
+    setVerticalThumbnail(thumbnailDataUrl);
+    
+    // Add to user's thumbnail collection
+    setUserThumbnails(prev => [...prev, thumbnailDataUrl]);
+    
+    console.log('🖼️ Captured vertical thumbnail with data URL length:', thumbnailDataUrl.length);
+    
+    return thumbnailDataUrl;
+  };
+
+  const handleVerticalImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      if (imageUrl) {
+        // Create a temporary image to check dimensions and crop if needed
+        const img = new Image();
+        img.onload = () => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          // Calculate crop dimensions for 9:16 aspect ratio
+          const targetRatio = 9 / 16;
+          const imageRatio = img.width / img.height;
+          
+          let cropWidth = img.width;
+          let cropHeight = img.height;
+          let offsetX = 0;
+          let offsetY = 0;
+          
+          if (imageRatio > targetRatio) {
+            // Image is wider than target, crop width
+            cropWidth = img.height * targetRatio;
+            offsetX = (img.width - cropWidth) / 2;
+          } else {
+            // Image is taller than target, crop height
+            cropHeight = img.width / targetRatio;
+            offsetY = (img.height - cropHeight) / 2;
+          }
+
+          // Set canvas dimensions to target ratio
+          canvas.width = cropWidth;
+          canvas.height = cropHeight;
+          
+          // Set white background
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, cropWidth, cropHeight);
+          
+          // Draw and crop the image
+          ctx.drawImage(img, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+          const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          setVerticalThumbnail(croppedDataUrl);
+          
+          // Add to user's thumbnail collection
+          setUserThumbnails(prev => [...prev, croppedDataUrl]);
+          
+          console.log('🖼️ Uploaded and cropped vertical thumbnail');
+        };
+        img.src = imageUrl;
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const formatTime = (time: number) => {
@@ -368,79 +533,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
             </div>
           )}
           
-          {/* Control Buttons */}
-          <div className="absolute top-2 md:top-3 right-2 md:right-3 flex flex-col md:flex-row gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowLogoSettings(true)}
-              className="bg-black bg-opacity-70 text-white border-white hover:bg-opacity-90 h-8 px-2 md:px-3 text-xs md:text-sm"
-            >
-              🏷️<span className="hidden sm:inline ml-1">Logo</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowThumbnails(true)}
-              className="bg-black bg-opacity-70 text-white border-white hover:bg-opacity-90 h-8 px-2 md:px-3 text-xs md:text-sm"
-            >
-              🎨<span className="hidden sm:inline ml-1">Customize Preview</span>
-            </Button>
-          </div>
-
-          {/* Quick Frame Capture Button */}
-          <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button
-              onClick={() => {
-                console.log('🎬 Make Video thumbnail clicked for scene:', selectedScene);
-                
-                // Force update thumbnail even if video isn't loaded
-                let frameData = captureFrameFromVideo();
-                
-                // If capture failed, use a test image or current thumbnail
-                if (!frameData) {
-                  console.log('🔄 Capture failed, using current scene thumbnail as test');
-                  frameData = currentScene.thumbnail;
-                }
-                
-                if (frameData) {
-                  console.log('✅ Thumbnail ready, updating local and parent state');
-                  setCustomThumbnail(frameData);
-                  setShowThumbnails(false);
-                  
-                  // Force notify parent component
-                  if (onThumbnailUpdate) {
-                    console.log('📤 FORCE notifying parent of thumbnail update for scene:', selectedScene);
-                    onThumbnailUpdate(selectedScene, frameData);
-                    
-                    // Also force a re-render by updating state again
-                    setTimeout(() => {
-                      console.log('🔄 Double-check: ensuring thumbnail update');
-                      onThumbnailUpdate(selectedScene, frameData);
-                    }, 100);
-                  } else {
-                    console.error('❌ onThumbnailUpdate callback is missing!');
-                  }
-                  
-                  // Show brief success feedback
-                  const button = document.querySelector('[data-capture-btn]');
-                  if (button) {
-                    button.textContent = '✅ Captured!';
-                    setTimeout(() => {
-                      button.textContent = '📸 Make Video thumbnail';
-                    }, 1500);
-                  }
-                } else {
-                  console.error('❌ No thumbnail data available');
-                }
-              }}
-              data-capture-btn
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2 md:px-4 py-1 md:py-2 text-xs md:text-sm shadow-lg transform transition-all duration-300 hover:scale-105"
-            >
-              <span className="hidden sm:inline">📸 Make Video thumbnail</span>
-              <span className="sm:hidden">📸</span>
-            </Button>
-          </div>
           
           {/* Hidden canvas for frame capture */}
           <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -509,6 +601,100 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               <span className="text-xs md:text-sm text-slate-400 min-w-[35px] md:min-w-[45px] lg:min-w-[50px] text-right flex-shrink-0">
                 {formatTime(duration)}
               </span>
+            </div>
+          </div>
+
+          {/* Video Action Buttons */}
+          <div className="bg-slate-800 rounded-lg p-2 mt-4 flex-shrink-0 w-full min-w-0">
+            <div className="border-b border-slate-600 pb-2 mb-2">
+              <p className="text-xs text-slate-400 text-center">Video Actions</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-1 w-full">
+              <Button
+                onClick={() => setShowVerticalPreview(true)}
+                size="sm"
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+              >
+                <Eye className="w-3 h-3 flex-shrink-0" />
+                <span className="hidden sm:inline truncate">Preview</span>
+                <span className="sm:hidden">P</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLogoSettings(true)}
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+              >
+                <span className="flex-shrink-0">🏷️</span>
+                <span className="hidden sm:inline truncate">Logo</span>
+                <span className="sm:hidden">L</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowThumbnails(true)}
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+              >
+                <span className="flex-shrink-0">🎨</span>
+                <span className="hidden sm:inline truncate">Custom</span>
+                <span className="sm:hidden">C</span>
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  console.log('🎬 Make Video thumbnail clicked for scene:', selectedScene);
+                  
+                  // Force update thumbnail even if video isn't loaded
+                  let frameData = captureFrameFromVideo();
+                  
+                  // If capture failed, use a test image or current thumbnail
+                  if (!frameData) {
+                    console.log('🔄 Capture failed, using current scene thumbnail as test');
+                    frameData = currentScene.thumbnail;
+                  }
+                  
+                  if (frameData) {
+                    console.log('✅ Thumbnail ready, updating local and parent state');
+                    setCustomThumbnail(frameData);
+                    setShowThumbnails(false);
+                    
+                    // Force notify parent component
+                    if (onThumbnailUpdate) {
+                      console.log('📤 FORCE notifying parent of thumbnail update for scene:', selectedScene);
+                      onThumbnailUpdate(selectedScene, frameData);
+                      
+                      // Also force a re-render by updating state again
+                      setTimeout(() => {
+                        console.log('🔄 Double-check: ensuring thumbnail update');
+                        onThumbnailUpdate(selectedScene, frameData);
+                      }, 100);
+                    } else {
+                      console.error('❌ onThumbnailUpdate callback is missing!');
+                    }
+                    
+                    // Show brief success feedback
+                    const button = document.querySelector('[data-capture-btn]');
+                    if (button) {
+                      button.textContent = '✅ Captured!';
+                      setTimeout(() => {
+                        button.textContent = '📸 Make Video thumbnail';
+                      }, 1500);
+                    }
+                  } else {
+                    console.error('❌ No thumbnail data available');
+                  }
+                }}
+                data-capture-btn
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+              >
+                <span className="flex-shrink-0">📸</span>
+                <span className="hidden sm:inline truncate">Thumbnail</span>
+                <span className="sm:hidden">T</span>
+              </Button>
             </div>
           </div>
 
@@ -638,19 +824,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </div>
       </div>
 
-      {/* Scene Info & Publish Button */}
+      {/* Scene Info */}
       <div className="mt-3 px-2 w-full min-w-0">
         <div className="flex items-center justify-between gap-2 w-full min-w-0">
           <p className="text-sm md:text-base text-slate-300 font-medium flex-shrink-0 min-w-0">Scene {selectedScene + 1} Preview</p>
           {onPublishAllScenes && (
-            <Button
-              onClick={onPublishAllScenes}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-3 md:px-4 flex-shrink-0"
-            >
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Publish</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                onClick={onPublishAllScenes}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-3 md:px-4"
+              >
+                <Upload className="w-4 h-4" />
+                <span className="hidden sm:inline">Publish</span>
+              </Button>
+            </div>
           )}
         </div>
         {customThumbnail && (
@@ -667,6 +855,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           </div>
         )}
       </div>
+
 
       {/* Enhanced Thumbnail Selection Modal */}
       {showThumbnails && (
@@ -720,7 +909,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                       onClick={() => setThumbnailMode('preset')}
                       className={`flex-1 ${thumbnailMode === 'preset' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                     >
-                      🎨 Presets
+                      📱 Layouts
                     </Button>
                     <Button
                       variant={thumbnailMode === 'logo' ? 'default' : 'ghost'}
@@ -728,50 +917,169 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                       onClick={() => setThumbnailMode('logo')}
                       className={`flex-1 ${thumbnailMode === 'logo' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                     >
-                      🏷️ Logo & Branding
+                      📝 Caption Styles
                     </Button>
                   </div>
 
-              {/* Quick Scene Thumbnails */}
+              {/* Vertical Video Layouts */}
               {thumbnailMode === 'preset' && (
                 <div className="space-y-6">
                   <div className="text-center">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">📹 Quick Scene Selection</h3>
-                    <p className="text-gray-600">Choose from existing scene thumbnails</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">📱 Vertical Video Layouts</h3>
+                    <p className="text-gray-600">Choose your preferred vertical video layout style</p>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {scenes.map((scene, index) => (
-                      <div
-                        key={scene.id}
-                        onClick={() => {
-                          setCustomThumbnail(null);
-                          setShowThumbnails(false);
-                        }}
-                        className="cursor-pointer group border-2 border-transparent hover:border-blue-500 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg"
-                      >
-                        <div className="relative">
-                          <img
-                            src={scene.thumbnail}
-                            alt={`Scene ${index + 1}`}
-                            className="w-full h-28 object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                            <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-blue-600 px-3 py-1 rounded-full">
-                              Select
-                            </span>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {/* Layout 1: Focused on One */}
+                    <div
+                      onClick={() => selectVerticalLayout('focused-on-one')}
+                      className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg bg-white ${
+                        selectedVerticalLayout === 'focused-on-one' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-500'
+                      }`}
+                    >
+                      <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
+                        {/* Mock vertical video content - Single focused element */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-3/5 h-3/5 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-2xl">👤</span>
                           </div>
                         </div>
-                        <div className="p-3 bg-white">
-                          <p className="text-sm text-center font-semibold text-gray-800">
-                            Scene {index + 1}
-                          </p>
-                          <p className="text-xs text-center text-gray-500">
-                            {scene.duration}
-                          </p>
+                      </div>
+                      <div className="p-3 text-center">
+                        <h5 className="font-medium text-gray-900 text-sm">Focused on One</h5>
+                        {selectedVerticalLayout === 'focused-on-one' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Layout 2: Half and Half */}
+                    <div
+                      onClick={() => selectVerticalLayout('half-and-half')}
+                      className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg bg-white ${
+                        selectedVerticalLayout === 'half-and-half' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-500'
+                      }`}
+                    >
+                      <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
+                        {/* Mock vertical video content - Split vertically */}
+                        <div className="absolute inset-0 flex flex-col">
+                          <div className="h-1/2 bg-green-500 flex items-center justify-center">
+                            <span className="text-white text-xl">A</span>
+                          </div>
+                          <div className="h-1/2 bg-blue-500 flex items-center justify-center">
+                            <span className="text-white text-xl">B</span>
+                          </div>
                         </div>
                       </div>
-                    ))}
+                      <div className="p-3 text-center">
+                        <h5 className="font-medium text-gray-900 text-sm">Half and Half</h5>
+                        {selectedVerticalLayout === 'half-and-half' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Layout 3: Picture in Picture */}
+                    <div
+                      onClick={() => selectVerticalLayout('picture-in-picture')}
+                      className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg bg-white ${
+                        selectedVerticalLayout === 'picture-in-picture' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-500'
+                      }`}
+                    >
+                      <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
+                        {/* Mock vertical video content - PiP */}
+                        <div className="absolute inset-0 bg-purple-500"></div>
+                        <div className="absolute bottom-4 right-4 w-1/3 h-1/4 bg-orange-500 rounded-lg flex items-center justify-center">
+                          <span className="text-white text-lg">👤</span>
+                        </div>
+                      </div>
+                      <div className="p-3 text-center">
+                        <h5 className="font-medium text-gray-900 text-sm">Picture in Picture</h5>
+                        {selectedVerticalLayout === 'picture-in-picture' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Layout 4: Full Screen */}
+                    <div
+                      onClick={() => selectVerticalLayout('full-screen')}
+                      className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg bg-white ${
+                        selectedVerticalLayout === 'full-screen' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-500'
+                      }`}
+                    >
+                      <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
+                        {/* Mock vertical video content - Full screen */}
+                        <div className="absolute inset-0 bg-red-500 flex items-center justify-center">
+                          <span className="text-white text-2xl">📺</span>
+                        </div>
+                      </div>
+                      <div className="p-3 text-center">
+                        <h5 className="font-medium text-gray-900 text-sm">Full Screen</h5>
+                        {selectedVerticalLayout === 'full-screen' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Layout 5: Split Screen */}
+                    <div
+                      onClick={() => selectVerticalLayout('split-screen')}
+                      className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg bg-white ${
+                        selectedVerticalLayout === 'split-screen' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-500'
+                      }`}
+                    >
+                      <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
+                        {/* Mock vertical video content - Side by side */}
+                        <div className="absolute inset-0 flex">
+                          <div className="w-1/2 h-full bg-indigo-500 flex items-center justify-center">
+                            <span className="text-white text-lg">L</span>
+                          </div>
+                          <div className="w-1/2 h-full bg-pink-500 flex items-center justify-center">
+                            <span className="text-white text-lg">R</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 text-center">
+                        <h5 className="font-medium text-gray-900 text-sm">Split Screen</h5>
+                        {selectedVerticalLayout === 'split-screen' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Layout 6: Custom */}
+                    <div
+                      onClick={() => selectVerticalLayout('custom')}
+                      className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg bg-white ${
+                        selectedVerticalLayout === 'custom' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-500'
+                      }`}
+                    >
+                      <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
+                        {/* Mock vertical video content - Custom layout */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                          <span className="text-gray-600 text-2xl">⚙️</span>
+                        </div>
+                      </div>
+                      <div className="p-3 text-center">
+                        <h5 className="font-medium text-gray-900 text-sm">Custom</h5>
+                        {selectedVerticalLayout === 'custom' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -794,39 +1102,156 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
                     <div className="mb-6">
                       <div className="relative">
-                        <div 
-                          className="w-full mx-auto rounded-xl overflow-hidden shadow-2xl border-2 border-blue-300 bg-gradient-to-br from-gray-900 to-black"
+                        <video
+                          ref={thumbnailVideoRef}
+                          src={currentScene?.videoUrl}
+                          poster={currentScene?.thumbnail}
+              className="w-full h-full object-cover"
                           style={{ 
                             aspectRatio: aspectRatio === '16:9' ? '16/9' : aspectRatio === '9:16' ? '9/16' : '1/1',
-                            maxWidth: aspectRatio === '9:16' ? '300px' : aspectRatio === '1:1' ? '400px' : '600px'
+                            minHeight: '200px'
                           }}
-                        >
-                          <img
-                            src={getCurrentThumbnail()}
-                            alt="Current frame preview"
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                            <Button
-                              onClick={() => {
-                                console.log('🎬 Make Video thumbnail clicked for scene:', selectedScene);
-                                const result = captureFrameFromVideo();
-                                if (result) {
-                                  console.log('✅ Thumbnail captured successfully');
-                                } else {
-                                  console.error('❌ Thumbnail capture failed');
-                                }
-                              }}
-                              size="lg"
-                              className="bg-white text-black hover:bg-gray-100 font-bold px-8 py-4 text-lg shadow-xl transform transition-all duration-300 hover:scale-105"
-                            >
-                              📸 Capture This Frame
-                            </Button>
+                          preload="metadata"
+                          controls={false}
+                          muted
+                          playsInline
+                          onLoadStart={() => {
+                            console.log('🎬 Thumbnail video load started:', currentScene?.videoUrl);
+                          }}
+                          onLoadedMetadata={() => {
+                            if (thumbnailVideoRef.current) {
+                              setDuration(thumbnailVideoRef.current.duration);
+                              console.log('✅ Thumbnail video metadata loaded - Duration:', thumbnailVideoRef.current.duration);
+                              console.log('📺 Thumbnail video dimensions:', thumbnailVideoRef.current.videoWidth, 'x', thumbnailVideoRef.current.videoHeight);
+                            }
+                          }}
+                          onCanPlay={() => {
+                            console.log('🎮 Thumbnail video can play');
+                          }}
+                          onError={(e) => {
+                            console.error('❌ Thumbnail video error:', e);
+                            console.error('❌ Thumbnail video src:', currentScene?.videoUrl);
+                          }}
+                          onTimeUpdate={() => {
+                            if (thumbnailVideoRef.current) {
+                              setCurrentTime(thumbnailVideoRef.current.currentTime);
+                            }
+                          }}
+                          onEnded={() => {
+                            setIsPlaying(false);
+                          }}
+                        />
+                        
+                        {/* Interactive Timeline Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                          {/* Timeline */}
+                          <div className="mb-3">
+                            <div className="relative">
+                              <div className="h-1 bg-white/30 rounded-full">
+                                <div 
+                                  className="h-full bg-blue-500 rounded-full transition-all duration-150"
+                                  style={{ width: `${(currentTime / duration) * 100}%` }}
+            />
+          </div>
+                              <div 
+                                className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg cursor-pointer border-2 border-blue-500"
+                                style={{ left: `${(currentTime / duration) * 100}%`, marginLeft: '-8px' }}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  const rect = e.currentTarget.parentElement?.getBoundingClientRect();
+                                  if (rect && thumbnailVideoRef.current) {
+                                    const handleMouseMove = (e: MouseEvent) => {
+                                      const x = e.clientX - rect.left;
+                                      const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+                                      const newTime = (percentage / 100) * duration;
+                                      thumbnailVideoRef.current!.currentTime = newTime;
+                                    };
+                                    const handleMouseUp = () => {
+                                      document.removeEventListener('mousemove', handleMouseMove);
+                                      document.removeEventListener('mouseup', handleMouseUp);
+                                    };
+                                    document.addEventListener('mousemove', handleMouseMove);
+                                    document.addEventListener('mouseup', handleMouseUp);
+                                  }
+                                }}
+                              />
+      </div>
                           </div>
-                          <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg">
-                            <p className="text-sm font-medium">{aspectRatio} Format</p>
-                            <p className="text-xs opacity-80">High Quality</p>
+                          
+                          {/* Controls */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (thumbnailVideoRef.current) {
+                                    thumbnailVideoRef.current.currentTime = Math.max(0, thumbnailVideoRef.current.currentTime - 10);
+                                  }
+                                }}
+                                className="text-white hover:bg-white/20"
+                              >
+                                <SkipBack className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (thumbnailVideoRef.current) {
+                                    if (isPlaying) {
+                                      thumbnailVideoRef.current.pause();
+                                      setIsPlaying(false);
+                                    } else {
+                                      thumbnailVideoRef.current.play();
+                                      setIsPlaying(true);
+                                    }
+                                  }
+                                }}
+                                className="text-white hover:bg-white/20"
+                              >
+                                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (thumbnailVideoRef.current) {
+                                    thumbnailVideoRef.current.currentTime = Math.min(duration, thumbnailVideoRef.current.currentTime + 10);
+                                  }
+                                }}
+                                className="text-white hover:bg-white/20"
+                              >
+                                <SkipForward className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <div className="text-white text-sm font-medium">
+                              {formatTime(currentTime)} / {formatTime(duration)}
+                            </div>
                           </div>
+                        </div>
+                        
+                        {/* Capture Button */}
+                        <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+                          <Button
+                            onClick={() => {
+                              console.log('🎬 Make Video thumbnail clicked for scene:', selectedScene);
+                              const result = captureFrameFromVideo();
+                              if (result) {
+                                console.log('✅ Thumbnail captured successfully');
+                              } else {
+                                console.error('❌ Thumbnail capture failed');
+                              }
+                            }}
+                            size="lg"
+                            className="bg-white text-black hover:bg-gray-100 font-bold px-8 py-4 text-lg shadow-xl transform transition-all duration-300 hover:scale-105"
+                          >
+                            📸 Capture This Frame
+                          </Button>
+                        </div>
+                        
+                        <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg">
+                          <p className="text-sm font-medium">{aspectRatio} Format</p>
+                          <p className="text-xs opacity-80">High Quality</p>
                         </div>
                       </div>
                     </div>
@@ -931,7 +1356,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                             </div>
                             <div className="flex gap-3 justify-center">
                               <Button
-                                onClick={selectThumbnailFromGallery}
+                                onClick={selectThumbnailFromFileUpload}
                                 variant="outline"
                                 size="lg"
                               >
@@ -960,7 +1385,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                                 </p>
                               </div>
                               <Button
-                                onClick={selectThumbnailFromGallery}
+                                onClick={selectThumbnailFromFileUpload}
                                 size="lg"
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-8"
                               >
@@ -978,22 +1403,264 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                     </div>
                   )}
 
-              {/* Logo & Branding Tab */}
+              {/* User Thumbnail Gallery */}
+              {userThumbnails.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold text-gray-900 mb-4">🖼️ Your Thumbnail Collection</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {userThumbnails.map((thumbnail, index) => (
+                      <div key={index} className="relative group">
+                        <div 
+                          className={`relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all duration-200 ${
+                            customThumbnail === thumbnail 
+                              ? 'border-blue-500 ring-2 ring-blue-200' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => selectThumbnailFromGallery(thumbnail)}
+                          style={{ aspectRatio: aspectRatio === '16:9' ? '16/9' : aspectRatio === '9:16' ? '9/16' : '1/1' }}
+                        >
+                          <img
+                            src={thumbnail}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          
+                          {/* Selection indicator */}
+                          {customThumbnail === thumbnail && (
+                            <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          
+                          {/* Hover overlay */}
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center">
+                              <Button
+                                size="sm"
+                                className="bg-white text-black hover:bg-gray-100 mb-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  selectThumbnailFromGallery(thumbnail);
+                                }}
+                              >
+                                Use This
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-red-500 text-white border-red-500 hover:bg-red-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeThumbnailFromGallery(index);
+                                }}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {userThumbnails.length > 0 && (
+                    <div className="mt-3 text-center">
+                      <p className="text-sm text-gray-500">
+                        {userThumbnails.length} thumbnail{userThumbnails.length !== 1 ? 's' : ''} in your collection
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Caption Styles Tab */}
               {thumbnailMode === 'logo' && (
                 <div className="space-y-6">
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🏷️ Logo & Branding Options</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">📝 Caption Styles</h3>
+                    <p className="text-sm text-gray-600 mb-6">Choose your preferred caption style for the video</p>
                     
-                    {/* Logo Watermark Component */}
-                    <LogoWatermark
-                      onLogoChange={(logoData) => {
-                        setLogoWatermark(logoData);
-                        if (onLogoUpdate) {
-                          onLogoUpdate(logoData);
-                        }
-                      }}
-                      currentLogo={logoWatermark}
-                    />
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {/* No Captions */}
+                      <div
+                        onClick={() => selectCaptionStyle('none')}
+                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                          selectedCaptionStyle === 'none' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="aspect-[9/16] bg-gradient-to-br from-blue-400 to-blue-600 relative">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-white text-2xl">🎥</span>
+                          </div>
+                        </div>
+                        <div className="p-3 text-center">
+                          <h5 className="font-medium text-gray-900 text-sm">No Captions</h5>
+                          {selectedCaptionStyle === 'none' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Minimal Style */}
+                      <div
+                        onClick={() => selectCaptionStyle('minimal')}
+                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                          selectedCaptionStyle === 'minimal' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="aspect-[9/16] bg-gradient-to-br from-gray-400 to-gray-600 relative">
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <div className="text-white text-xs text-center">
+                              This is an example text with{' '}
+                              <span className="bg-gray-200 text-gray-800 px-1 rounded">highlighted</span>{' '}
+                              word example.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 text-center">
+                          <h5 className="font-medium text-gray-900 text-sm">Minimal</h5>
+                          {selectedCaptionStyle === 'minimal' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Modern Style */}
+                      <div
+                        onClick={() => selectCaptionStyle('modern')}
+                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                          selectedCaptionStyle === 'modern' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="aspect-[9/16] bg-gradient-to-br from-green-400 to-green-600 relative">
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <div className="text-white text-xs text-center">
+                              This is an example text with{' '}
+                              <span className="bg-blue-100 text-blue-800 px-1 py-0.5 rounded-md font-medium">highlighted</span>{' '}
+                              word example.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 text-center">
+                          <h5 className="font-medium text-gray-900 text-sm">Modern</h5>
+                          {selectedCaptionStyle === 'modern' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bold Style */}
+                      <div
+                        onClick={() => selectCaptionStyle('bold')}
+                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                          selectedCaptionStyle === 'bold' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="aspect-[9/16] bg-gradient-to-br from-purple-400 to-purple-600 relative">
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <div className="text-white text-xs text-center">
+                              This is an example text with{' '}
+                              <span className="bg-yellow-400 text-gray-900 px-1 py-0.5 border border-yellow-500 font-bold">highlighted</span>{' '}
+                              word example.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 text-center">
+                          <h5 className="font-medium text-gray-900 text-sm">Bold</h5>
+                          {selectedCaptionStyle === 'bold' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Elegant Style */}
+                      <div
+                        onClick={() => selectCaptionStyle('elegant')}
+                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                          selectedCaptionStyle === 'elegant' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="aspect-[9/16] bg-gradient-to-br from-pink-400 to-pink-600 relative">
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <div className="text-white text-xs text-center">
+                              This is an example text with{' '}
+                              <span className="bg-purple-100 text-purple-800 px-1 py-0.5 rounded-full">highlighted</span>{' '}
+                              word example.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 text-center">
+                          <h5 className="font-medium text-gray-900 text-sm">Elegant</h5>
+                          {selectedCaptionStyle === 'elegant' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Neon Style */}
+                      <div
+                        onClick={() => selectCaptionStyle('neon')}
+                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                          selectedCaptionStyle === 'neon' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="aspect-[9/16] bg-gradient-to-br from-indigo-400 to-indigo-600 relative">
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <div className="text-white text-xs text-center">
+                              This is an example text with{' '}
+                              <span className="bg-green-400 text-gray-900 px-1 py-0.5 font-bold shadow-md">highlighted</span>{' '}
+                              word example.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 text-center">
+                          <h5 className="font-medium text-gray-900 text-sm">Neon</h5>
+                          {selectedCaptionStyle === 'neon' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Retro Style */}
+                      <div
+                        onClick={() => selectCaptionStyle('retro')}
+                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                          selectedCaptionStyle === 'retro' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="aspect-[9/16] bg-gradient-to-br from-orange-400 to-orange-600 relative">
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <div className="text-white text-xs text-center">
+                              This is an example text with{' '}
+                              <span className="bg-orange-300 text-gray-900 px-1 py-0.5 border border-orange-400 font-bold">highlighted</span>{' '}
+                              word example.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 text-center">
+                          <h5 className="font-medium text-gray-900 text-sm">Retro</h5>
+                          {selectedCaptionStyle === 'retro' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1021,14 +1688,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   )}
                   {thumbnailMode === 'preset' && (
                     <div>
-                      <p>🎨 Preset Thumbnails</p>
-                      <p className="text-xs text-gray-500 mt-1">Choose from curated options</p>
+                      <p>📱 Vertical Layouts</p>
+                      <p className="text-xs text-gray-500 mt-1">Choose video layout style</p>
                     </div>
                   )}
                   {thumbnailMode === 'logo' && (
                     <div>
-                      <p>🏷️ Logo & Branding</p>
-                      <p className="text-xs text-gray-500 mt-1">{logoWatermark.image ? 'Logo selected' : 'No logo selected'}</p>
+                      <p>📝 Caption Styles</p>
+                      <p className="text-xs text-gray-500 mt-1">Choose text highlighting style</p>
                     </div>
                   )}
                 </div>
@@ -1093,6 +1760,126 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           </div>
         </div>
       )}
+
+      {/* Vertical Preview Modal */}
+      <Dialog open={showVerticalPreview} onOpenChange={setShowVerticalPreview}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Vertical Format Preview
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Preview Container */}
+            <div className="bg-black rounded-lg p-4 flex justify-center">
+              <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ width: '200px', height: '355px' }}>
+                {/* Vertical Video Preview */}
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
+                  <div className="text-center text-white">
+                    <div className="mb-4">
+                      <video
+                        src={currentScene?.videoUrl}
+                        className="w-full h-auto max-h-full object-cover rounded"
+                        style={{ aspectRatio: '9/16' }}
+                        controls
+                        muted
+                        poster={verticalThumbnail || undefined}
+                      />
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Scene {selectedScene + 1} - Vertical Format
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Logo Overlay (if present) */}
+                {logoWatermark.image && (
+                  <div
+                    className="absolute"
+                    style={{
+                      [logoWatermark.position.includes('top') ? 'top' : 'bottom']: '10px',
+                      [logoWatermark.position.includes('left') ? 'left' : 'right']: '10px',
+                      opacity: logoWatermark.opacity / 100
+                    }}
+                  >
+                    <img
+                      src={logoWatermark.image}
+                      alt="Logo"
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Vertical Thumbnail Selection */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h4 className="font-medium text-gray-900 mb-3">📸 Vertical Thumbnail</h4>
+              <div className="space-y-3">
+                {/* Current Vertical Thumbnail Preview */}
+                {verticalThumbnail && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <img
+                      src={verticalThumbnail}
+                      alt="Vertical thumbnail"
+                      className="w-16 h-28 object-cover rounded border border-gray-300"
+                      style={{ aspectRatio: '9/16' }}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Custom Vertical Thumbnail</p>
+                      <p className="text-xs text-gray-500">9:16 aspect ratio</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVerticalThumbnail(null)}
+                      className="text-red-600 border-red-300 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Thumbnail Selection Options */}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={captureVerticalFrameFromVideo}
+                    size="sm"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    📸 Capture from Video
+                  </Button>
+                  <Button
+                    onClick={() => verticalUploadRef.current?.click()}
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    📁 Upload Image
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-gray-500">
+                  💡 Capture the perfect frame from your video or upload a custom vertical thumbnail (9:16 ratio)
+                </p>
+              </div>
+            </div>
+            
+          </div>
+          
+          
+          {/* Hidden file input for vertical thumbnail upload */}
+          <input
+            ref={verticalUploadRef}
+            type="file"
+            accept="image/*"
+            onChange={handleVerticalImageUpload}
+            className="hidden"
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

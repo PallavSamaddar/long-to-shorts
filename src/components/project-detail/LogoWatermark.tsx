@@ -4,7 +4,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Upload, X, Image as ImageIcon, Building2, Globe } from 'lucide-react';
+import { X, Building2 } from 'lucide-react';
 
 interface LogoWatermarkProps {
   onLogoChange: (logo: {
@@ -52,13 +52,11 @@ const domainLogos = {
 const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo }) => {
   const [selectedLogo, setSelectedLogo] = useState<string | null>(currentLogo.image);
   const [selectedDomain, setSelectedDomain] = useState<string>('default');
-  const [logoSource, setLogoSource] = useState<'domain' | 'custom'>('custom');
   
   const userDomains = getUserDomains();
 
   const handleDomainSelection = (domain: string) => {
     setSelectedDomain(domain);
-    setLogoSource('domain');
     
     if (domain !== 'default' && domainLogos[domain as keyof typeof domainLogos]) {
       const logoData = domainLogos[domain as keyof typeof domainLogos];
@@ -73,40 +71,7 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
     }
   };
 
-  const handleLogoSourceChange = (source: 'domain' | 'custom') => {
-    setLogoSource(source);
-    if (source === 'domain' && selectedDomain !== 'default') {
-      const logoData = domainLogos[selectedDomain as keyof typeof domainLogos];
-      if (logoData.logo) {
-        setSelectedLogo(logoData.logo);
-        onLogoChange({
-          image: logoData.logo,
-          position: currentLogo.position,
-          opacity: currentLogo.opacity
-        });
-      }
-    }
-  };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setSelectedLogo(result);
-        setLogoSource('custom');
-        onLogoChange({
-          image: result,
-          position: currentLogo.position,
-          opacity: currentLogo.opacity
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handlePositionChange = (position: string) => {
     onLogoChange({
@@ -134,52 +99,33 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Logo Selection Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🏢 Logo & Watermark Settings</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         
-        {/* Logo Source Selection */}
-        <div className="mb-6">
-          <h4 className="font-medium text-gray-900 mb-3">Choose Logo Source</h4>
-          <div className="flex gap-2">
-            <Button
-              variant={logoSource === 'domain' ? 'default' : 'outline'}
-              onClick={() => handleLogoSourceChange('domain')}
-              className="flex items-center gap-2"
-            >
-              <Building2 className="w-4 h-4" />
-              Domain Logos
-            </Button>
-            <Button
-              variant={logoSource === 'custom' ? 'default' : 'outline'}
-              onClick={() => handleLogoSourceChange('custom')}
-              className="flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Custom Upload
-            </Button>
-          </div>
-        </div>
-
         {/* Domain Logo Selection */}
-        {logoSource === 'domain' && (
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Select Domain Logo</h4>
-            <div className="grid grid-cols-1 gap-3">
+        <div className="mb-4">
+          <h4 className="font-medium text-gray-900 mb-2">Select Domain Logo</h4>
+            <div className={`grid gap-2 w-full ${
+              userDomains.length === 1 ? 'grid-cols-1' :
+              userDomains.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
+              userDomains.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
+              userDomains.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+              'grid-cols-1'
+            }`}>
               {userDomains.map((domain) => {
                 const logoData = domainLogos[domain as keyof typeof domainLogos];
                 return (
                   <div
                     key={domain}
                     onClick={() => handleDomainSelection(domain)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all w-full min-w-0 ${
                       selectedDomain === domain 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full min-w-0">
                       <div 
                         className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
                         style={{ backgroundColor: logoData.color }}
@@ -191,15 +137,15 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
                             className="w-8 h-8 object-contain"
                           />
                         ) : (
-                          <Globe className="w-6 h-6" />
+                          <Building2 className="w-6 h-6" />
                         )}
                       </div>
-                      <div>
-                        <h5 className="font-medium text-gray-900">{logoData.name}</h5>
-                        <p className="text-sm text-gray-500">{domain}</p>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-medium text-gray-900 truncate">{logoData.name}</h5>
+                        <p className="text-sm text-gray-500 truncate">{domain}</p>
                       </div>
                       {selectedDomain === domain && (
-                        <div className="ml-auto">
+                        <div className="ml-auto flex-shrink-0">
                           <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                             <span className="text-white text-xs">✓</span>
                           </div>
@@ -211,38 +157,6 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
               })}
             </div>
           </div>
-        )}
-
-        {/* Custom Logo Upload */}
-        {logoSource === 'custom' && (
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Upload Custom Logo</h4>
-            <div className="text-center">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 mb-4 bg-gray-50">
-                <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Your Logo</h4>
-                <p className="text-gray-600 mb-4">Add your brand logo or watermark to the video</p>
-                <Button
-                  onClick={() => document.getElementById('logo-upload')?.click()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Choose Logo File
-                </Button>
-                <input
-                  id="logo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </div>
-              <p className="text-xs text-gray-500">
-                Supported formats: PNG, JPG, SVG. Recommended: Transparent PNG for best results.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Current Logo Preview */}
         {selectedLogo && (
@@ -267,8 +181,7 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
         )}
       </div>
 
-      {/* Position Settings */}
-      {selectedLogo && (
+      {/* Position Settings - Always Visible */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h4 className="font-semibold text-gray-900 mb-4">📍 Logo Position</h4>
           <div className="grid grid-cols-2 gap-4">
@@ -309,10 +222,8 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
             Choose where to place the logo on your video
           </p>
         </div>
-      )}
 
-      {/* Opacity Settings */}
-      {selectedLogo && (
+      {/* Opacity Settings - Always Visible */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h4 className="font-semibold text-gray-900 mb-4">🎨 Logo Opacity</h4>
           <div className="space-y-4">
@@ -365,7 +276,6 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
             </p>
           </div>
         </div>
-      )}
     </div>
   );
 };

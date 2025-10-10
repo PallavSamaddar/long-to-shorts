@@ -11,9 +11,11 @@ interface ScenesListFinalProps {
   onPreviousScene?: () => void;
   onNextScene?: () => void;
   updatedThumbnails?: { [key: number]: string };
+  isLeftPanelCollapsed?: boolean;
+  onToggleLeftPanel?: () => void;
 }
 
-const ScenesListFinal = ({ selectedScene, onSceneSelect, onPreviousScene, onNextScene, updatedThumbnails }: ScenesListFinalProps) => {
+const ScenesListFinal = ({ selectedScene, onSceneSelect, onPreviousScene, onNextScene, updatedThumbnails, isLeftPanelCollapsed, onToggleLeftPanel }: ScenesListFinalProps) => {
   // Debug log to verify updated thumbnails are received
   console.log('📱 ScenesListFinal received updatedThumbnails:', updatedThumbnails);
   
@@ -27,31 +29,48 @@ const ScenesListFinal = ({ selectedScene, onSceneSelect, onPreviousScene, onNext
   return (
     <div className="w-full bg-white border-r border-slate-200 flex flex-col h-full">
       <div className="p-3 border-b border-slate-200 flex-shrink-0">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base font-semibold text-slate-900">Scenes</h3>
-          <span className="text-sm text-slate-500">Scene {selectedScene + 1} of {scenes.length}</span>
-        </div>
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            onClick={onPreviousScene}
-            variant="outline"
-            size="sm"
-            disabled={selectedScene === 0}
-            className="flex items-center gap-1 px-3 py-1"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="text-xs">Previous</span>
-          </Button>
-          <Button
-            onClick={onNextScene}
-            variant="outline"
-            size="sm"
-            disabled={selectedScene === scenes.length - 1}
-            className="flex items-center gap-1 px-3 py-1"
-          >
-            <span className="text-xs">Next</span>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center relative">
+          {/* Left side - Collapse button or spacer */}
+          <div className="w-8 flex justify-start">
+            {onToggleLeftPanel && (
+              <button
+                onClick={onToggleLeftPanel}
+                className="p-1 hover:bg-slate-100 rounded transition-colors duration-200"
+                title={isLeftPanelCollapsed ? "Expand panel" : "Collapse panel"}
+              >
+                {isLeftPanelCollapsed ? (
+                  <ChevronRight className="w-4 h-4 text-slate-600" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4 text-slate-600" />
+                )}
+              </button>
+            )}
+          </div>
+          
+          {/* Center - Scene Counter */}
+          <div className="flex-1 flex justify-center">
+            <span className="text-sm text-slate-500">Scene {selectedScene + 1} of {scenes.length}</span>
+          </div>
+          
+          {/* Right side - Navigation arrows */}
+          <div className="w-16 flex justify-end gap-1">
+            <button
+              onClick={onPreviousScene}
+              disabled={selectedScene === 0}
+              className="p-1 hover:bg-slate-100 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Previous Scene"
+            >
+              <ChevronLeft className="w-4 h-4 text-slate-600" />
+            </button>
+            <button
+              onClick={onNextScene}
+              disabled={selectedScene === scenes.length - 1}
+              className="p-1 hover:bg-slate-100 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Next Scene"
+            >
+              <ChevronRight className="w-4 h-4 text-slate-600" />
+            </button>
+          </div>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
