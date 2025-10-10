@@ -3,15 +3,19 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Info } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Info, Upload } from 'lucide-react';
 import { scenes } from '@/data/projectDetailData';
 import LogoWatermark from './LogoWatermark';
 
 interface VideoPlayerProps {
   selectedScene: number;
+  onThumbnailUpdate?: (sceneIndex: number, thumbnailUrl: string) => void;
+  onLogoUpdate?: (logoData: { image: string | null; position: string; opacity: number }) => void;
+  onPublishAllScenes?: () => void;
+  updatedThumbnails?: { [key: number]: string };
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpdate, onLogoUpdate, onPublishAllScenes, updatedThumbnails }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -48,6 +52,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
   useEffect(() => {
     setDuration(durationToSeconds(currentScene.duration));
   }, [currentScene.duration]);
+
+  // Reset customThumbnail when scene changes to use parent's updated thumbnail
+  useEffect(() => {
+    setCustomThumbnail(null);
+  }, [selectedScene]);
 
   // Video event handlers setup
   useEffect(() => {
@@ -140,8 +149,61 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
         if (file.type.startsWith('image/')) {
           const reader = new FileReader();
           reader.onload = (e) => {
-            const result = e.target?.result as string;
-            setCustomThumbnail(result);
+            const imageData = e.target?.result as string;
+            
+            // Create a new image to crop according to aspect ratio
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              if (!ctx) return;
+              
+              const imgWidth = img.width;
+              const imgHeight = img.height;
+              let cropWidth = imgWidth;
+              let cropHeight = imgHeight;
+              let offsetX = 0;
+              let offsetY = 0;
+              
+              // Calculate crop dimensions based on selected aspect ratio
+              if (aspectRatio === '9:16') {
+                const targetRatio = 9 / 16;
+                const imgRatio = imgWidth / imgHeight;
+                
+                if (imgRatio > targetRatio) {
+                  cropWidth = imgHeight * targetRatio;
+                  offsetX = (imgWidth - cropWidth) / 2;
+                } else {
+                  cropHeight = imgWidth / targetRatio;
+                  offsetY = (imgHeight - cropHeight) / 2;
+                }
+              } else if (aspectRatio === '1:1') {
+                const minDimension = Math.min(imgWidth, imgHeight);
+                cropWidth = minDimension;
+                cropHeight = minDimension;
+                offsetX = (imgWidth - minDimension) / 2;
+                offsetY = (imgHeight - minDimension) / 2;
+              } else { // 16:9
+                const targetRatio = 16 / 9;
+                const imgRatio = imgWidth / imgHeight;
+                
+                if (imgRatio > targetRatio) {
+                  cropWidth = imgHeight * targetRatio;
+                  offsetX = (imgWidth - cropWidth) / 2;
+                } else {
+                  cropHeight = imgWidth / targetRatio;
+                  offsetY = (imgHeight - cropHeight) / 2;
+                }
+              }
+              
+              canvas.width = cropWidth;
+              canvas.height = cropHeight;
+              ctx.drawImage(img, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+              
+              setCustomThumbnail(canvas.toDataURL('image/jpeg', 0.9));
+            };
+            img.src = imageData;
           };
           reader.readAsDataURL(file);
         }
@@ -151,20 +213,43 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
   };
 
   const getCurrentThumbnail = () => {
+    // Priority: customThumbnail (local) > updatedThumbnails (parent) > original scene thumbnail
     if (customThumbnail) return customThumbnail;
+    if (updatedThumbnails?.[selectedScene]) return updatedThumbnails[selectedScene];
     return currentScene.thumbnail;
   };
 
   const captureFrameFromVideo = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas) return null;
+    if (!video || !canvas) {
+      console.warn('❌ Video or canvas ref not available');
+      return null;
+    }
 
     // Check if video is loaded and has content
     if (video.videoWidth === 0 || video.videoHeight === 0) {
-      console.warn('Video not loaded yet, using thumbnail instead');
-      return getCurrentThumbnail();
+      console.warn('❌ Video not loaded yet (dimensions:', video.videoWidth, 'x', video.videoHeight, ')');
+      // Try to use the current poster image as fallback
+      const posterSrc = video.poster;
+      if (posterSrc && onThumbnailUpdate) {
+        console.log('🔄 Using poster image as thumbnail for scene:', selectedScene);
+        onThumbnailUpdate(selectedScene, posterSrc);
+        setCustomThumbnail(posterSrc);
+        return posterSrc;
+      }
+      // If no poster, try to use the current scene's thumbnail
+      const currentThumbnail = getCurrentThumbnail();
+      if (currentThumbnail && onThumbnailUpdate) {
+        console.log('🔄 Using current scene thumbnail as fallback for scene:', selectedScene);
+        onThumbnailUpdate(selectedScene, currentThumbnail);
+        setCustomThumbnail(currentThumbnail);
+        return currentThumbnail;
+      }
+      return currentThumbnail;
     }
+
+    console.log('✅ Video loaded with dimensions:', video.videoWidth, 'x', video.videoHeight);
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
@@ -217,7 +302,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
     // Draw video frame
     ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
-    return canvas.toDataURL('image/jpeg', 0.8);
+    const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Notify parent component about thumbnail update
+    if (onThumbnailUpdate) {
+      console.log('🖼️ Updating thumbnail for scene:', selectedScene, 'with data URL length:', thumbnailDataUrl.length);
+      onThumbnailUpdate(selectedScene, thumbnailDataUrl);
+    } else {
+      console.warn('⚠️ onThumbnailUpdate callback not provided');
+    }
+    
+    // Also update local state
+    setCustomThumbnail(thumbnailDataUrl);
+    
+    return thumbnailDataUrl;
   };
 
   const formatTime = (time: number) => {
@@ -229,22 +327,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="w-[40%] bg-black flex flex-col p-6">
+    <div className="w-full bg-black flex flex-col p-2 md:p-4 overflow-y-auto overflow-x-hidden h-full min-w-0 max-w-full">
       {/* Video Player */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col min-h-0 min-w-0">
         {/* Main Video Container */}
-        <div className="relative bg-black rounded-lg overflow-hidden group">
+        <div className="relative bg-black rounded-md md:rounded-lg group w-full min-w-0">
           <video
             ref={videoRef}
-            className="w-full h-full object-cover"
+            className="w-full h-auto cursor-pointer"
             poster={getCurrentThumbnail()}
             muted={isMuted}
             preload="metadata"
+            onClick={togglePlayPause}
             style={{ 
-              minHeight: '500px',
-              maxHeight: '600px',
-              aspectRatio: '16/9',
-              backgroundColor: '#f3f4f6'
+              backgroundColor: '#000000',
+              maxHeight: '60vh',
+              minHeight: '200px'
             }}
           >
             <source src={currentScene.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'} type="video/mp4" />
@@ -271,33 +369,59 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
           )}
           
           {/* Control Buttons */}
-          <div className="absolute top-3 right-3 flex gap-2">
+          <div className="absolute top-2 md:top-3 right-2 md:right-3 flex flex-col md:flex-row gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowLogoSettings(true)}
-              className="bg-black bg-opacity-70 text-white border-white hover:bg-opacity-90"
+              className="bg-black bg-opacity-70 text-white border-white hover:bg-opacity-90 h-8 px-2 md:px-3 text-xs md:text-sm"
             >
-              🏷️ Logo
+              🏷️<span className="hidden sm:inline ml-1">Logo</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowThumbnails(true)}
-              className="bg-black bg-opacity-70 text-white border-white hover:bg-opacity-90"
+              className="bg-black bg-opacity-70 text-white border-white hover:bg-opacity-90 h-8 px-2 md:px-3 text-xs md:text-sm"
             >
-              🎨 Customize Preview
+              🎨<span className="hidden sm:inline ml-1">Customize Preview</span>
             </Button>
           </div>
 
           {/* Quick Frame Capture Button */}
-          <div className="absolute bottom-3 left-3">
+          <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Button
               onClick={() => {
-                const frameData = captureFrameFromVideo();
+                console.log('🎬 Make Video thumbnail clicked for scene:', selectedScene);
+                
+                // Force update thumbnail even if video isn't loaded
+                let frameData = captureFrameFromVideo();
+                
+                // If capture failed, use a test image or current thumbnail
+                if (!frameData) {
+                  console.log('🔄 Capture failed, using current scene thumbnail as test');
+                  frameData = currentScene.thumbnail;
+                }
+                
                 if (frameData) {
+                  console.log('✅ Thumbnail ready, updating local and parent state');
                   setCustomThumbnail(frameData);
                   setShowThumbnails(false);
+                  
+                  // Force notify parent component
+                  if (onThumbnailUpdate) {
+                    console.log('📤 FORCE notifying parent of thumbnail update for scene:', selectedScene);
+                    onThumbnailUpdate(selectedScene, frameData);
+                    
+                    // Also force a re-render by updating state again
+                    setTimeout(() => {
+                      console.log('🔄 Double-check: ensuring thumbnail update');
+                      onThumbnailUpdate(selectedScene, frameData);
+                    }, 100);
+                  } else {
+                    console.error('❌ onThumbnailUpdate callback is missing!');
+                  }
+                  
                   // Show brief success feedback
                   const button = document.querySelector('[data-capture-btn]');
                   if (button) {
@@ -306,12 +430,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
                       button.textContent = '📸 Make Video thumbnail';
                     }, 1500);
                   }
+                } else {
+                  console.error('❌ No thumbnail data available');
                 }
               }}
               data-capture-btn
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 shadow-lg transform transition-all duration-300 hover:scale-105"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2 md:px-4 py-1 md:py-2 text-xs md:text-sm shadow-lg transform transition-all duration-300 hover:scale-105"
             >
-              📸 Make Video thumbnail
+              <span className="hidden sm:inline">📸 Make Video thumbnail</span>
+              <span className="sm:hidden">📸</span>
             </Button>
           </div>
           
@@ -320,46 +447,92 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
         </div>
 
         {/* Video Controls Section */}
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-4 flex-shrink-0 min-h-0">
           {/* Progress Bar Section */}
-          <div className="bg-slate-800 rounded-lg p-4">
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-300 font-medium min-w-[50px]">
+          <div className="bg-slate-800 rounded-lg p-2 md:p-4 mt-4 flex-shrink-0 w-full min-w-0">
+            <div className="flex items-center gap-1 md:gap-2 lg:gap-4 w-full min-w-0">
+              <span className="text-xs md:text-sm text-slate-300 font-medium min-w-[35px] md:min-w-[45px] lg:min-w-[50px] flex-shrink-0">
                 {formatTime(currentTime)}
               </span>
-              <Slider
-                value={[progress]}
-                onValueChange={handleSeek}
-                max={100}
-                step={0.1}
-                className="flex-1"
-              />
-              <span className="text-sm text-slate-400 min-w-[50px] text-right">
+              <div className="flex-1 relative min-w-0">
+                <div 
+                  className="h-2 w-full bg-slate-600 rounded-full cursor-pointer overflow-hidden touch-none"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percentage = (x / rect.width) * 100;
+                    const newTime = (percentage / 100) * duration;
+                    if (videoRef.current) {
+                      videoRef.current.currentTime = newTime;
+                      setCurrentTime(newTime);
+                    }
+                  }}
+                >
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-200 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div
+                  className="absolute top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full shadow-lg cursor-pointer transition-all duration-200 hover:scale-110"
+                  style={{ left: `calc(${progress}% - 8px)` }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    const startX = e.clientX;
+                    const startProgress = progress;
+                    
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                      const rect = (e.target as HTMLElement).parentElement?.getBoundingClientRect();
+                      if (!rect) return;
+                      
+                      const deltaX = moveEvent.clientX - startX;
+                      const deltaProgress = (deltaX / rect.width) * 100;
+                      const newProgress = Math.max(0, Math.min(100, startProgress + deltaProgress));
+                      const newTime = (newProgress / 100) * duration;
+                      
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = newTime;
+                        setCurrentTime(newTime);
+                      }
+                    };
+                    
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+                    
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }}
+                />
+              </div>
+              <span className="text-xs md:text-sm text-slate-400 min-w-[35px] md:min-w-[45px] lg:min-w-[50px] text-right flex-shrink-0">
                 {formatTime(duration)}
               </span>
             </div>
           </div>
 
           {/* Control Buttons Section */}
-          <div className="bg-slate-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <div className="bg-slate-800 rounded-lg p-2 md:p-3 mt-4 flex-shrink-0 w-full min-w-0">
+            <div className="flex flex-col space-y-2 lg:space-y-3 w-full min-w-0">
+              {/* Primary Controls Row */}
+              <div className="flex items-center justify-center gap-1 md:gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={skipBackward}
-                  className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600"
+                  className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 h-8 px-2 md:px-3 flex-shrink-0"
                   title="Skip back 10 seconds"
                 >
                   <SkipBack className="w-4 h-4" />
-                  <span className="ml-1 text-xs">10s</span>
+                  <span className="ml-1 text-xs hidden sm:inline">10s</span>
                 </Button>
 
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={togglePlayPause}
-                  className="bg-blue-600 text-white border-blue-500 hover:bg-blue-700"
+                  className="bg-blue-600 text-white border-blue-500 hover:bg-blue-700 h-8 px-3 md:px-4 flex-shrink-0"
                 >
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </Button>
@@ -368,39 +541,84 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
                   variant="outline"
                   size="sm"
                   onClick={skipForward}
-                  className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600"
+                  className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 h-8 px-2 md:px-3 flex-shrink-0"
                   title="Skip forward 10 seconds"
                 >
                   <SkipForward className="w-4 h-4" />
-                  <span className="ml-1 text-xs">10s</span>
+                  <span className="ml-1 text-xs hidden sm:inline">10s</span>
                 </Button>
               </div>
 
-              <div className="flex items-center gap-4">
+              {/* Secondary Controls Row - Stacks vertically on very wide screens */}
+              <div className="flex flex-col xl:flex-row items-center justify-center gap-2 xl:gap-4">
                 {/* Volume Control */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={toggleMute}
-                    className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600"
+                    className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 h-8 px-2 flex-shrink-0"
                   >
                     {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </Button>
-                  <Slider
-                    value={[volume * 100]}
-                    onValueChange={handleVolumeChange}
-                    max={100}
-                    step={1}
-                    className="w-20"
-                  />
+                  <div className="w-12 md:w-14 lg:w-16 relative flex-shrink-0">
+                    <div 
+                      className="h-2 w-full bg-slate-600 rounded-full cursor-pointer overflow-hidden"
+                      onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+                        const newVolume = percentage / 100;
+                        if (videoRef.current) {
+                          videoRef.current.volume = newVolume;
+                          setVolume(newVolume);
+                        }
+                      }}
+                    >
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-200 ease-out"
+                        style={{ width: `${volume * 100}%` }}
+                      />
+                    </div>
+                    <div
+                      className="absolute top-1/2 transform -translate-y-1/2 h-3 w-3 bg-white rounded-full shadow-md cursor-pointer transition-all duration-200 hover:scale-110"
+                      style={{ left: `calc(${volume * 100}% - 6px)` }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const startX = e.clientX;
+                        const startVolume = volume;
+                        
+                        const handleMouseMove = (moveEvent: MouseEvent) => {
+                          const rect = (e.target as HTMLElement).parentElement?.getBoundingClientRect();
+                          if (!rect) return;
+                          
+                          const deltaX = moveEvent.clientX - startX;
+                          const deltaVolume = deltaX / rect.width;
+                          const newVolume = Math.max(0, Math.min(1, startVolume + deltaVolume));
+                          
+                          if (videoRef.current) {
+                            videoRef.current.volume = newVolume;
+                            setVolume(newVolume);
+                          }
+                        };
+                        
+                        const handleMouseUp = () => {
+                          document.removeEventListener('mousemove', handleMouseMove);
+                          document.removeEventListener('mouseup', handleMouseUp);
+                        };
+                        
+                        document.addEventListener('mousemove', handleMouseMove);
+                        document.addEventListener('mouseup', handleMouseUp);
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Speed Control */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-300">Speed:</span>
+                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                  <span className="text-xs md:text-sm text-slate-300 hidden lg:inline">Speed:</span>
                   <Select value={playbackRate.toString()} onValueChange={(value) => changePlaybackRate(parseFloat(value))}>
-                    <SelectTrigger className="w-16 h-8 bg-slate-700 border-slate-600 text-white text-xs">
+                    <SelectTrigger className="w-12 md:w-14 lg:w-16 h-8 bg-slate-700 border-slate-600 text-white text-xs flex-shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -420,9 +638,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
         </div>
       </div>
 
-      {/* Scene Info */}
-      <div className="mt-3 text-center">
-        <p className="text-sm text-slate-300">Scene {selectedScene + 1} Preview</p>
+      {/* Scene Info & Publish Button */}
+      <div className="mt-3 px-2 w-full min-w-0">
+        <div className="flex items-center justify-between gap-2 w-full min-w-0">
+          <p className="text-sm md:text-base text-slate-300 font-medium flex-shrink-0 min-w-0">Scene {selectedScene + 1} Preview</p>
+          {onPublishAllScenes && (
+            <Button
+              onClick={onPublishAllScenes}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-3 md:px-4 flex-shrink-0"
+            >
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">Publish</span>
+            </Button>
+          )}
+        </div>
         {customThumbnail && (
           <div className="mt-2 flex items-center justify-center gap-2">
             <span className="text-xs text-green-400">✅ Custom thumbnail set</span>
@@ -502,142 +732,46 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
                     </Button>
                   </div>
 
-              {/* Enhanced Preset Thumbnails */}
+              {/* Quick Scene Thumbnails */}
               {thumbnailMode === 'preset' && (
                 <div className="space-y-6">
                   <div className="text-center">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">🎨 Professional Thumbnail Templates</h3>
-                    <p className="text-gray-600">High-converting, eye-catching designs for maximum engagement</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">📹 Quick Scene Selection</h3>
+                    <p className="text-gray-600">Choose from existing scene thumbnails</p>
                   </div>
-
-                  {/* Professional Template Categories */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[
-                      { 
-                        id: 1, 
-                        title: "Tech & Innovation", 
-                        category: "Technology", 
-                        gradient: "from-blue-500 via-purple-500 to-pink-500",
-                        image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=250&fit=crop&q=80",
-                        stats: "95% CTR"
-                      },
-                      { 
-                        id: 2, 
-                        title: "Business & Finance", 
-                        category: "Business", 
-                        gradient: "from-emerald-500 via-teal-500 to-cyan-500",
-                        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=250&fit=crop&q=80",
-                        stats: "87% CTR"
-                      },
-                      { 
-                        id: 3, 
-                        title: "Education & Learning", 
-                        category: "Education", 
-                        gradient: "from-orange-500 via-red-500 to-pink-500",
-                        image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=250&fit=crop&q=80",
-                        stats: "92% CTR"
-                      },
-                      { 
-                        id: 4, 
-                        title: "Lifestyle & Health", 
-                        category: "Lifestyle", 
-                        gradient: "from-pink-500 via-rose-500 to-red-500",
-                        image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop&q=80",
-                        stats: "89% CTR"
-                      },
-                      { 
-                        id: 5, 
-                        title: "Creative & Design", 
-                        category: "Creative", 
-                        gradient: "from-indigo-500 via-purple-500 to-pink-500",
-                        image: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&h=250&fit=crop&q=80",
-                        stats: "94% CTR"
-                      },
-                      { 
-                        id: 6, 
-                        title: "Nature & Environment", 
-                        category: "Nature", 
-                        gradient: "from-green-500 via-emerald-500 to-teal-500",
-                        image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=250&fit=crop&q=80",
-                        stats: "91% CTR"
-                      }
-                    ].map((template) => (
-                      <div key={template.id} className="relative group cursor-pointer transform transition-all duration-300 hover:scale-105">
-                        <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 group-hover:border-blue-500 transition-all duration-300 shadow-lg group-hover:shadow-2xl">
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {scenes.map((scene, index) => (
+                      <div
+                        key={scene.id}
+                        onClick={() => {
+                          setCustomThumbnail(null);
+                          setShowThumbnails(false);
+                        }}
+                        className="cursor-pointer group border-2 border-transparent hover:border-blue-500 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg"
+                      >
+                        <div className="relative">
                           <img
-                            src={template.image}
-                            alt={template.title}
-                            className="w-full h-48 object-cover"
+                            src={scene.thumbnail}
+                            alt={`Scene ${index + 1}`}
+                            className="w-full h-28 object-cover group-hover:scale-110 transition-transform duration-300"
                           />
-                          <div className={`absolute inset-0 bg-gradient-to-br ${template.gradient} opacity-70`}></div>
-                          <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
-                            <div className="mb-2">
-                              <h4 className="font-bold text-lg mb-1">{template.title}</h4>
-                              <p className="text-sm opacity-90">{template.category}</p>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full font-medium">
-                                {template.stats}
-                              </span>
-                              <span className="text-xs opacity-75">High Performance</span>
-                            </div>
-                          </div>
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                              <Button 
-                                size="sm" 
-                                className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-6 py-2 shadow-lg"
-                              >
-                                ✨ Use Template
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="absolute top-3 right-3">
-                            <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
-                              PRO
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                            <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-blue-600 px-3 py-1 rounded-full">
+                              Select
                             </span>
                           </div>
                         </div>
+                        <div className="p-3 bg-white">
+                          <p className="text-sm text-center font-semibold text-gray-800">
+                            Scene {index + 1}
+                          </p>
+                          <p className="text-xs text-center text-gray-500">
+                            {scene.duration}
+                          </p>
+                        </div>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Quick Scene Thumbnails */}
-                  <div className="mt-8">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">📹 Quick Scene Selection</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {scenes.map((scene, index) => (
-                        <div
-                          key={scene.id}
-                          onClick={() => {
-                            setCustomThumbnail(null);
-                            setShowThumbnails(false);
-                          }}
-                          className="cursor-pointer group border-2 border-transparent hover:border-blue-500 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg"
-                        >
-                          <div className="relative">
-                            <img
-                              src={scene.thumbnail}
-                              alt={`Scene ${index + 1}`}
-                              className="w-full h-28 object-cover group-hover:scale-110 transition-transform duration-300"
-                            />
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                              <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-blue-600 px-3 py-1 rounded-full">
-                                Select
-                              </span>
-                            </div>
-                          </div>
-                          <div className="p-3 bg-white">
-                            <p className="text-sm text-center font-semibold text-gray-800">
-                              Scene {index + 1}
-                            </p>
-                            <p className="text-xs text-center text-gray-500">
-                              {scene.duration}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -674,7 +808,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
                             <Button
-                              onClick={captureFrameFromVideo}
+                              onClick={() => {
+                                console.log('🎬 Make Video thumbnail clicked for scene:', selectedScene);
+                                const result = captureFrameFromVideo();
+                                if (result) {
+                                  console.log('✅ Thumbnail captured successfully');
+                                } else {
+                                  console.error('❌ Thumbnail capture failed');
+                                }
+                              }}
                               size="lg"
                               className="bg-white text-black hover:bg-gray-100 font-bold px-8 py-4 text-lg shadow-xl transform transition-all duration-300 hover:scale-105"
                             >
@@ -725,58 +867,116 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
                 </div>
               )}
 
-              {/* Gallery Upload */}
-              {thumbnailMode === 'gallery' && (
-                <div className="space-y-6">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Custom Image</h3>
-                    
-                    {customThumbnail ? (
-                      <div className="text-center">
+                  {/* Gallery Upload */}
+                  {thumbnailMode === 'gallery' && (
+                    <div className="space-y-6">
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Custom Image</h3>
+                        
+                        {/* Aspect Ratio Selection */}
                         <div className="mb-6">
-                          <img
-                            src={customThumbnail}
-                            alt="Uploaded thumbnail preview"
-                            className="w-full max-w-md mx-auto rounded-lg shadow-lg border-2 border-green-300"
-                            style={{ aspectRatio: '16/9' }}
-                          />
+                          <h4 className="font-semibold text-gray-900 mb-4">📐 Choose Thumbnail Format</h4>
+                          <div className="grid grid-cols-3 gap-4">
+                            <Button
+                              variant={aspectRatio === '16:9' ? 'default' : 'outline'}
+                              onClick={() => setAspectRatio('16:9')}
+                              className="flex flex-col items-center p-4 h-auto hover:scale-105 transition-transform border-2"
+                            >
+                              <span className="text-2xl mb-2">📺</span>
+                              <span className="font-bold text-sm">16:9</span>
+                              <span className="text-xs text-gray-500 mt-1">Horizontal</span>
+                            </Button>
+                            <Button
+                              variant={aspectRatio === '9:16' ? 'default' : 'outline'}
+                              onClick={() => setAspectRatio('9:16')}
+                              className="flex flex-col items-center p-4 h-auto hover:scale-105 transition-transform border-2"
+                            >
+                              <span className="text-2xl mb-2">📱</span>
+                              <span className="font-bold text-sm">9:16</span>
+                              <span className="text-xs text-gray-500 mt-1">Vertical</span>
+                            </Button>
+                            <Button
+                              variant={aspectRatio === '1:1' ? 'default' : 'outline'}
+                              onClick={() => setAspectRatio('1:1')}
+                              className="flex flex-col items-center p-4 h-auto hover:scale-105 transition-transform border-2"
+                            >
+                              <span className="text-2xl mb-2">⬜</span>
+                              <span className="font-bold text-sm">1:1</span>
+                              <span className="text-xs text-gray-500 mt-1">Square</span>
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-3 text-center">
+                            💡 Choose the format that matches your target platform (YouTube: 16:9, Instagram: 9:16, etc.)
+                          </p>
                         </div>
-                        <div className="flex gap-3 justify-center">
-                          <Button
-                            onClick={selectThumbnailFromGallery}
-                            variant="outline"
-                            size="lg"
-                          >
-                            📁 Choose Different Image
-                          </Button>
-                          <Button
-                            onClick={() => setShowThumbnails(false)}
-                            size="lg"
-                            className="bg-green-600 hover:bg-green-700 text-white px-8"
-                          >
-                            ✅ Use This Image
-                          </Button>
-                        </div>
+                        
+                        {customThumbnail ? (
+                          <div className="text-center">
+                            <div className="mb-6">
+                              <div className="relative inline-block">
+                                <img
+                                  src={customThumbnail}
+                                  alt="Uploaded thumbnail preview"
+                                  className="rounded-lg shadow-lg border-2 border-green-300"
+                                  style={{ 
+                                    aspectRatio: aspectRatio === '16:9' ? '16/9' : aspectRatio === '9:16' ? '9/16' : '1/1',
+                                    maxWidth: aspectRatio === '9:16' ? '200px' : aspectRatio === '1:1' ? '300px' : '400px',
+                                    height: aspectRatio === '9:16' ? '355px' : 'auto'
+                                  }}
+                                />
+                                <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                                  {aspectRatio}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex gap-3 justify-center">
+                              <Button
+                                onClick={selectThumbnailFromGallery}
+                                variant="outline"
+                                size="lg"
+                              >
+                                📁 Choose Different Image
+                              </Button>
+                              <Button
+                                onClick={() => setShowThumbnails(false)}
+                                size="lg"
+                                className="bg-green-600 hover:bg-green-700 text-white px-8"
+                              >
+                                ✅ Use This Image
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 mb-6 bg-gray-50">
+                              <div className="text-6xl mb-4">📁</div>
+                              <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Your Custom Thumbnail</h4>
+                              <p className="text-gray-600 mb-4">Perfect for branded content, custom artwork, or promotional images</p>
+                              <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                                <p className="text-sm text-blue-800 font-medium">
+                                  📐 Selected Format: {aspectRatio === '16:9' ? 'Horizontal (16:9)' : 
+                                                   aspectRatio === '9:16' ? 'Vertical (9:16)' : 
+                                                   'Square (1:1)'}
+                                </p>
+                              </div>
+                              <Button
+                                onClick={selectThumbnailFromGallery}
+                                size="lg"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-8"
+                              >
+                                📁 Choose from Gallery
+                              </Button>
+                            </div>
+                            <div className="bg-yellow-50 rounded-lg p-4">
+                              <p className="text-sm text-yellow-800">
+                                💡 <strong>Pro Tip:</strong> Your image will be automatically cropped to fit the selected {aspectRatio} format for optimal display across platforms.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="text-center">
-                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 mb-6 bg-gray-50">
-                          <div className="text-6xl mb-4">📁</div>
-                          <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Your Custom Thumbnail</h4>
-                          <p className="text-gray-600 mb-6">Perfect for branded content, custom artwork, or promotional images</p>
-                          <Button
-                            onClick={selectThumbnailFromGallery}
-                            size="lg"
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-8"
-                          >
-                            📁 Choose from Gallery
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                    </div>
+                  )}
 
               {/* Logo & Branding Tab */}
               {thumbnailMode === 'logo' && (
@@ -784,58 +984,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">🏷️ Logo & Branding Options</h3>
                     
-                    {/* Predefined Logos Section */}
-                    <div className="mb-8">
-                      <h4 className="font-semibold text-gray-900 mb-4">🎨 Predefined Logos</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        {[
-                          { id: 'tech', name: 'Tech', icon: '💻', color: 'bg-blue-500' },
-                          { id: 'business', name: 'Business', icon: '💼', color: 'bg-gray-600' },
-                          { id: 'creative', name: 'Creative', icon: '🎨', color: 'bg-purple-500' },
-                          { id: 'education', name: 'Education', icon: '📚', color: 'bg-green-500' },
-                          { id: 'health', name: 'Health', icon: '🏥', color: 'bg-red-500' },
-                          { id: 'finance', name: 'Finance', icon: '💰', color: 'bg-yellow-500' },
-                          { id: 'fitness', name: 'Fitness', icon: '💪', color: 'bg-orange-500' },
-                          { id: 'travel', name: 'Travel', icon: '✈️', color: 'bg-cyan-500' }
-                        ].map((logo) => (
-                          <div
-                            key={logo.id}
-                            onClick={() => {
-                              // Create a simple logo placeholder
-                              const canvas = document.createElement('canvas');
-                              canvas.width = 200;
-                              canvas.height = 200;
-                              const ctx = canvas.getContext('2d');
-                              if (ctx) {
-                                ctx.fillStyle = logo.color.replace('bg-', '#');
-                                ctx.fillRect(0, 0, 200, 200);
-                                ctx.fillStyle = 'white';
-                                ctx.font = 'bold 60px Arial';
-                                ctx.textAlign = 'center';
-                                ctx.fillText(logo.icon, 100, 120);
-                                const logoData = canvas.toDataURL();
-                                setLogoWatermark({ ...logoWatermark, image: logoData });
-                              }
-                            }}
-                            className="cursor-pointer group border-2 border-gray-200 rounded-lg p-4 text-center hover:border-blue-500 transition-all duration-200 hover:shadow-lg"
-                          >
-                            <div className={`w-16 h-16 mx-auto mb-2 rounded-lg ${logo.color} flex items-center justify-center text-white text-2xl`}>
-                              {logo.icon}
-                            </div>
-                            <p className="text-sm font-medium text-gray-700">{logo.name}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Custom Logo Upload */}
-                    <div className="border-t pt-6">
-                      <h4 className="font-semibold text-gray-900 mb-4">📁 Upload Custom Logo</h4>
-                      <LogoWatermark
-                        onLogoChange={setLogoWatermark}
-                        currentLogo={logoWatermark}
-                      />
-                    </div>
+                    {/* Logo Watermark Component */}
+                    <LogoWatermark
+                      onLogoChange={(logoData) => {
+                        setLogoWatermark(logoData);
+                        if (onLogoUpdate) {
+                          onLogoUpdate(logoData);
+                        }
+                      }}
+                      currentLogo={logoWatermark}
+                    />
                   </div>
                 </div>
               )}
@@ -913,7 +1071,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene }) => {
             {/* Content */}
             <div className="p-6">
               <LogoWatermark
-                onLogoChange={setLogoWatermark}
+                onLogoChange={(logoData) => {
+                  setLogoWatermark(logoData);
+                  if (onLogoUpdate) {
+                    onLogoUpdate(logoData);
+                  }
+                }}
                 currentLogo={logoWatermark}
               />
             </div>

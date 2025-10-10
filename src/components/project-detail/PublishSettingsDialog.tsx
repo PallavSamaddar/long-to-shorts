@@ -4,15 +4,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Youtube, Globe, Instagram, Twitter, Facebook, Linkedin, Twitch,  Twitter as X } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Upload, Youtube, Globe, Instagram, Twitter, Facebook, Linkedin, Twitch,  Twitter as X, Video, PlayCircle, FolderOpen } from 'lucide-react';
 
 interface PublishSettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  currentSceneIndex?: number;
+  totalScenes?: number;
 }
 
-const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ isOpen, onClose }) => {
+const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ 
+  isOpen, 
+  onClose, 
+  currentSceneIndex = 0, 
+  totalScenes = 7 
+}) => {
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>(['slike']);
+  const [publishScope, setPublishScope] = useState<'current' | 'all'>('current');
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
@@ -91,7 +101,10 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ isOpen, o
           <div className="space-y-4">
             <Progress value={progress} className="w-full" />
             <p className="text-sm text-gray-600 text-center">
-              Uploading to {selectedDestinations.length} destination{selectedDestinations.length !== 1 ? 's' : ''}... {progress}%
+              {publishScope === 'current' 
+                ? `Uploading Scene ${currentSceneIndex + 1} to ${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''}... ${progress}%`
+                : `Uploading all scenes to ${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''}... ${progress}%`
+              }
             </p>
           </div>
         </DialogContent>
@@ -101,7 +114,16 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ isOpen, o
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh]">
+      <DialogContent 
+        className="!max-w-[90vw] !w-[90vw] sm:!max-w-2xl sm:!w-full max-h-[80vh] overflow-hidden"
+        style={{ 
+          maxWidth: '90vw !important',
+          width: '90vw !important',
+          left: '50% !important',
+          top: '50% !important',
+          transform: 'translate(-50%, -50%) !important'
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
@@ -109,7 +131,47 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ isOpen, o
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 max-h-96 overflow-y-auto">
+        {/* Publish Scope Selection */}
+        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <Video className="w-4 h-4" />
+            What would you like to publish?
+          </h3>
+          <RadioGroup value={publishScope} onValueChange={(value) => setPublishScope(value as 'current' | 'all')}>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="current" id="current" />
+                <div className="flex items-center space-x-3 flex-1">
+                  <PlayCircle className="w-5 h-5 text-blue-600" />
+                  <div className="flex-1">
+                    <Label htmlFor="current" className="text-sm font-medium text-gray-900 cursor-pointer">
+                      Current Scene Only
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      Publish Scene {currentSceneIndex + 1} of {totalScenes} ({publishScope === 'current' ? 'Selected' : 'Click to select'})
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="all" id="all" />
+                <div className="flex items-center space-x-3 flex-1">
+                  <FolderOpen className="w-5 h-5 text-green-600" />
+                  <div className="flex-1">
+                    <Label htmlFor="all" className="text-sm font-medium text-gray-900 cursor-pointer">
+                      Publish
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      Publish all {totalScenes} scenes as a complete project
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
           {/* Social Media Platforms */}
           <div>
             <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('socialMedia')}</h3>
@@ -213,7 +275,10 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ isOpen, o
             disabled={selectedDestinations.length === 0}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            Publish ({selectedDestinations.length} destination{selectedDestinations.length !== 1 ? 's' : ''})
+            {publishScope === 'current' 
+              ? `Publish Scene ${currentSceneIndex + 1} (${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''})`
+              : `Publish (${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''})`
+            }
           </Button>
         </div>
       </DialogContent>

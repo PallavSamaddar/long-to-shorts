@@ -1,191 +1,171 @@
-
-import React, { useImperativeHandle, forwardRef, useRef, useState, useCallback, useEffect } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { transcripts } from '@/data/projectDetailData';
+import React, { useState } from 'react';
+import { Edit3, Save, X, Plus, Expand } from 'lucide-react';
+import { scenes } from '@/data/projectDetailData';
+import { Button } from '@/components/ui/button';
 
 interface TranscriptsListProps {
-  selectedTranscript: number;
   selectedScene: number;
-  onTranscriptSelect: (index: number) => void;
+  onTranscriptUpdate?: (sceneIndex: number, newTranscript: string) => void;
+  updatedTranscripts?: { [key: number]: string };
 }
 
-export interface TranscriptsListRef {
-  scrollToTranscript: (index: number) => void;
-}
+const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTranscriptUpdate, updatedTranscripts }) => {
+  const [transcriptText, setTranscriptText] = useState('');
+  const [fullScriptText, setFullScriptText] = useState('');
+  const [currentSceneHeight, setCurrentSceneHeight] = useState(150); // Default height for current scene
+  const [isResizing, setIsResizing] = useState(false);
 
-interface TextSelection {
-  segmentIndex: number;
-  startOffset: number;
-  endOffset: number;
-  selectedText: string;
-}
+  // Get current scene's transcript (prioritize updated transcript over original)
+  const currentScene = scenes[selectedScene];
+  const currentTranscript = updatedTranscripts?.[selectedScene] || currentScene?.transcript || '';
 
-// Predefined highlights for each scene - longer text sections
-const sceneHighlights = [
-  { segmentIndex: 0, startOffset: 50, endOffset: 200, selectedText: "we'll explore the revolutionary changes that artificial intelligence has brought to various industries and how it's reshaping our understanding of technology" },
-  { segmentIndex: 1, startOffset: 0, endOffset: 150, selectedText: "Machine learning algorithms have become increasingly sophisticated, enabling computers to learn from data without explicit programming" },
-  { segmentIndex: 2, startOffset: 20, endOffset: 180, selectedText: "The integration of AI in everyday applications has transformed user experiences dramatically. From personalized recommendations on streaming platforms to intelligent assistants" },
-  { segmentIndex: 3, startOffset: 0, endOffset: 160, selectedText: "Natural language processing has reached new heights with the development of large language models. These systems can now understand context, generate human-like text" },
-  { segmentIndex: 4, startOffset: 0, endOffset: 170, selectedText: "Computer vision technology has advanced to the point where machines can identify objects, recognize faces, and even interpret emotions with incredible precision" },
-  { segmentIndex: 5, startOffset: 0, endOffset: 180, selectedText: "The ethical considerations surrounding AI development have become increasingly important as these technologies become more powerful and widespread" },
-  { segmentIndex: 6, startOffset: 0, endOffset: 190, selectedText: "Artificial intelligence is transforming the healthcare industry in unprecedented ways. From drug discovery and personalized medicine to diagnostic imaging and robotic surgery" }
-];
+  // Initialize transcript text and full script when component mounts or scene changes
+  React.useEffect(() => {
+    setTranscriptText(currentTranscript);
+    setFullScriptText(getFullScript());
+  }, [currentTranscript, updatedTranscripts]);
 
-const TranscriptsList = forwardRef<TranscriptsListRef, TranscriptsListProps>(
-  ({ selectedTranscript, selectedScene, onTranscriptSelect }, ref) => {
-    const transcriptRefs = useRef<(HTMLDivElement | null)[]>([]);
-    const [textSelection, setTextSelection] = useState<TextSelection | null>(null);
+  // Get full script (all scenes combined)
+  const getFullScript = () => {
+    return scenes.map((scene, index) => {
+      const transcript = updatedTranscripts?.[index] || scene.transcript || '';
+      return `Scene ${index + 1}:\n${transcript}`;
+    }).join('\n\n');
+  };
 
-    // Set default highlight based on selected scene
-    useEffect(() => {
-      const sceneHighlight = sceneHighlights[selectedScene % sceneHighlights.length];
-      if (sceneHighlight) {
-        setTextSelection(sceneHighlight);
-      }
-    }, [selectedScene]);
+  // Handle direct transcript editing (local state only)
+  const handleTranscriptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setTranscriptText(newText);
+  };
 
-    useImperativeHandle(ref, () => ({
-      scrollToTranscript: (index: number) => {
-        const element = transcriptRefs.current[index];
-        if (element) {
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }
-      }
-    }));
+  // Handle saving current scene transcript
+  const handleSaveCurrentScene = () => {
+    if (onTranscriptUpdate) {
+      onTranscriptUpdate(selectedScene, transcriptText);
+    }
+  };
 
-    // Auto-scroll to highlighted segment when scene changes
-    useEffect(() => {
-      const sceneHighlight = sceneHighlights[selectedScene % sceneHighlights.length];
-      if (sceneHighlight) {
-        const element = transcriptRefs.current[sceneHighlight.segmentIndex];
-        if (element) {
-          setTimeout(() => {
-            element.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            });
-          }, 200);
-        }
-      }
-    }, [selectedScene]);
+  // Update full script when individual transcripts change
+  React.useEffect(() => {
+    setFullScriptText(getFullScript());
+  }, [transcriptText, updatedTranscripts]);
 
-    // Generate timestamps for each transcript segment
-    const generateTimestamp = (index: number) => {
-      const startSeconds = index * 15; // 15 seconds per segment
-      const endSeconds = (index + 1) * 15;
+
+  // Handle resize functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  };
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
       
-      const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        const milliseconds = Math.floor(Math.random() * 999); // Random milliseconds for variety
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
-      };
-
-      return `${formatTime(startSeconds)} --> ${formatTime(endSeconds)}`;
+      const container = document.querySelector('[data-transcript-container]') as HTMLElement;
+      if (!container) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      const relativeY = e.clientY - containerRect.top;
+      
+      // Set minimum and maximum heights
+      const minHeight = 100;
+      const maxHeight = containerRect.height - 200; // Leave space for full script
+      
+      const newHeight = Math.max(minHeight, Math.min(maxHeight, relativeY));
+      setCurrentSceneHeight(newHeight);
     };
 
-    const handleTextSelection = useCallback(() => {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-        return;
-      }
-
-      const range = selection.getRangeAt(0);
-      const selectedText = selection.toString().trim();
-      
-      if (!selectedText) return;
-
-      // Find which transcript segment contains the selection
-      let segmentIndex = -1;
-      for (let i = 0; i < transcriptRefs.current.length; i++) {
-        const element = transcriptRefs.current[i];
-        if (element && element.contains(range.commonAncestorContainer)) {
-          segmentIndex = i;
-          break;
-        }
-      }
-
-      if (segmentIndex !== -1) {
-        // Get the original transcript text (not the rendered HTML)
-        const originalText = transcripts[segmentIndex];
-        const startOffset = originalText.indexOf(selectedText);
-        
-        if (startOffset !== -1) {
-          const endOffset = startOffset + selectedText.length;
-
-          setTextSelection({
-            segmentIndex,
-            startOffset,
-            endOffset,
-            selectedText
-          });
-
-          // Trigger the existing callback to update the selected transcript
-          onTranscriptSelect(segmentIndex);
-        }
-      }
-
-      // Clear browser's default text selection after processing
-      selection.removeAllRanges();
-    }, [onTranscriptSelect]);
-
-    const renderHighlightedText = (text: string, segmentIndex: number) => {
-      if (!textSelection || textSelection.segmentIndex !== segmentIndex) {
-        return text;
-      }
-
-      const { startOffset, endOffset } = textSelection;
-      const beforeSelection = text.slice(0, startOffset);
-      const selectedText = text.slice(startOffset, endOffset);
-      const afterSelection = text.slice(endOffset);
-
-      return (
-        <>
-          {beforeSelection}
-          <span className="bg-yellow-300">{selectedText}</span>
-          {afterSelection}
-        </>
-      );
+    const handleMouseUp = () => {
+      setIsResizing(false);
     };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
     return (
-      <div className="w-[40%] bg-white border-r border-slate-200 flex flex-col h-full">
+    <div className="w-full bg-white border-r border-slate-200 flex flex-col h-full">
+      {/* Header */}
         <div className="p-4 border-b border-slate-200 flex-shrink-0">
+        <div>
           <h3 className="text-lg font-semibold text-slate-900">Transcript</h3>
+          <p className="text-xs text-slate-500 mt-1">Scene {selectedScene + 1} • Full Script Below</p>
         </div>
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-            <div className="p-4" onMouseUp={handleTextSelection}>
-              <div className="space-y-4">
-                {transcripts.map((transcript, index) => (
-                  <div
-                    key={index}
-                    ref={(el) => (transcriptRefs.current[index] = el)}
-                    onClick={() => onTranscriptSelect(index)}
-                    className="p-4 rounded-lg cursor-pointer transition-all hover:bg-slate-50"
-                  >
-                    <div className="flex flex-col gap-2">
-                      <span className="text-xs font-mono text-slate-500 select-none">
-                        {generateTimestamp(index)}
-                      </span>
-                      <p className="text-slate-700 leading-relaxed text-sm">
-                        {renderHighlightedText(transcript, index)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-hidden" data-transcript-container>
+        <div className="p-4 h-full flex flex-col">
+          {/* Current Scene Transcript - Directly Editable */}
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex-shrink-0">
+            <h4 className="text-sm font-semibold text-slate-700 mb-3">Current Scene Transcript:</h4>
+            <textarea
+              value={transcriptText}
+              onChange={handleTranscriptChange}
+              placeholder="Enter transcript text for this scene..."
+              className="w-full p-3 border border-slate-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              style={{
+                fontSize: '14px',
+                lineHeight: '1.6',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                height: `${currentSceneHeight}px`
+              }}
+            />
+            <div className="flex justify-end mt-3">
+              <Button
+                onClick={handleSaveCurrentScene}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                size="sm"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Update Script
+              </Button>
             </div>
-          </ScrollArea>
+          </div>
+
+          {/* Resizable Divider */}
+          <div 
+            className="w-full h-2 bg-slate-200 hover:bg-slate-300 cursor-ns-resize flex items-center justify-center group transition-colors duration-200"
+            onMouseDown={handleMouseDown}
+          >
+            <div className="w-8 h-0.5 bg-slate-400 group-hover:bg-slate-500 rounded-full"></div>
+          </div>
+
+          {/* Full Video Script - Read-only for Reference */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex-1 flex flex-col min-h-0">
+            <h4 className="text-sm font-semibold text-blue-700 mb-3">Full Video Script:</h4>
+            <p className="text-xs text-blue-600 mb-3">
+              📋 Copy text from here and paste into the Current Scene Transcript above to edit.
+            </p>
+            <textarea
+              value={fullScriptText}
+              readOnly
+              placeholder="Full video script for reference..."
+              className="flex-1 w-full p-3 border border-blue-300 rounded resize-none bg-slate-100 text-slate-700"
+              style={{
+                fontSize: '14px',
+                lineHeight: '1.6',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+              }}
+            />
+            {/* No Update Script button here - this section is read-only for reference only */}
+          </div>
+        </div>
         </div>
       </div>
     );
-  }
-);
-
-TranscriptsList.displayName = 'TranscriptsList';
+};
 
 export default TranscriptsList;
