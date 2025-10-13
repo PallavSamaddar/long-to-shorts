@@ -149,7 +149,7 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
               })}
             </div>
           </div>
-
+A
       </div>
 
       {/* Position Settings - Always Visible */}

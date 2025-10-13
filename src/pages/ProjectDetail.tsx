@@ -110,6 +110,7 @@ const ProjectDetail = () => {
         onClose={() => setIsPublishDialogOpen(false)}
         currentSceneIndex={selectedScene}
         totalScenes={scenes.length}
+        availableThumbnails={updatedThumbnails}
       />
     </div>
   );

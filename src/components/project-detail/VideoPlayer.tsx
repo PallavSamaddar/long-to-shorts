@@ -505,20 +505,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
   return (
     <div className="w-full bg-black flex flex-col p-2 md:p-4 overflow-y-auto overflow-x-hidden h-full min-w-0 max-w-full">
-      {/* Publish Button - Top */}
-      {onPublishAllScenes && (
-        <div className="flex justify-end mb-4">
-          <Button
-            onClick={onPublishAllScenes}
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2.5"
-          >
-            <Upload className="w-4 h-4" />
-            <span className="font-medium">Publish</span>
-          </Button>
-        </div>
-      )}
-      
       {/* Video Player */}
       <div className="flex flex-col min-h-0 min-w-0">
         {/* Main Video Container */}
@@ -614,11 +600,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         {/* Video Controls Section */}
         <div className="mt-4 space-y-4 flex-shrink-0 min-h-0">
           {/* Progress Bar Section */}
-          <div className="bg-slate-800 rounded-lg p-2 md:p-4 mt-4 flex-shrink-0 w-full min-w-0">
-            <div className="flex items-center gap-1 md:gap-2 lg:gap-4 w-full min-w-0">
-              <span className="text-xs md:text-sm text-slate-300 font-medium min-w-[35px] md:min-w-[45px] lg:min-w-[50px] flex-shrink-0">
+          <div className="bg-slate-800 rounded-lg p-3 md:p-4 mt-4 flex-shrink-0 w-full min-w-0">
+            <div className="flex items-center gap-3 w-full min-w-0">
+              {/* Time Display */}
+              <span className="text-sm text-slate-300 font-medium min-w-[45px] flex-shrink-0">
                 {formatTime(currentTime)}
               </span>
+              
+              {/* Progress Bar */}
               <div className="flex-1 relative min-w-0">
                 <div 
                   className="h-2 w-full bg-slate-600 rounded-full cursor-pointer overflow-hidden touch-none"
@@ -671,9 +660,100 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   }}
                 />
               </div>
-              <span className="text-xs md:text-sm text-slate-400 min-w-[35px] md:min-w-[45px] lg:min-w-[50px] text-right flex-shrink-0">
+              
+              {/* Duration Display */}
+              <span className="text-sm text-slate-400 min-w-[45px] text-right flex-shrink-0">
                 {formatTime(duration)}
               </span>
+              
+              {/* Control Buttons - Right Side */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Play/Pause Button */}
+                <Button
+                  onClick={togglePlayPause}
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                >
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </Button>
+                
+                {/* Skip Buttons */}
+                <Button
+                  onClick={skipBackward}
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                  title="Skip backward 10s"
+                >
+                  <SkipBack className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  onClick={skipForward}
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                  title="Skip forward 10s"
+                >
+                  <SkipForward className="w-4 h-4" />
+                </Button>
+                
+                {/* Volume Button */}
+                <Button
+                  onClick={toggleMute}
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                  title={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </Button>
+                
+                {/* Speed Controls */}
+                <div className="flex items-center gap-1 ml-2">
+                  <Button
+                    onClick={() => changePlaybackRate(1)}
+                    size="sm"
+                    variant={playbackRate === 1 ? "default" : "ghost"}
+                    className={`h-8 px-3 text-sm font-medium rounded-full transition-all duration-200 ${
+                      playbackRate === 1 
+                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                        : "text-slate-300 hover:text-white hover:bg-slate-700"
+                    }`}
+                    title="Normal speed"
+                  >
+                    1x
+                  </Button>
+                  
+                  <Button
+                    onClick={() => changePlaybackRate(2)}
+                    size="sm"
+                    variant={playbackRate === 2 ? "default" : "ghost"}
+                    className={`h-8 px-3 text-sm font-medium rounded-full transition-all duration-200 ${
+                      playbackRate === 2 
+                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                        : "text-slate-300 hover:text-white hover:bg-slate-700"
+                    }`}
+                    title="Double speed"
+                  >
+                    2x
+                  </Button>
+                </div>
+
+                {/* Publish Button - On Video Player Line */}
+                {onPublishAllScenes && (
+                  <Button
+                    onClick={onPublishAllScenes}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium flex items-center gap-2 px-3 py-1 rounded-full transition-all duration-200 ml-2"
+                    title="Publish Video"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span className="text-sm">Publish</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -765,132 +845,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                 <span className="hidden sm:inline truncate">Thumbnail</span>
                 <span className="sm:hidden">T</span>
               </Button>
+
             </div>
           </div>
 
-          {/* Control Buttons Section */}
-          <div className="bg-slate-800 rounded-lg p-2 md:p-3 mt-4 flex-shrink-0 w-full min-w-0">
-            <div className="flex flex-col space-y-2 lg:space-y-3 w-full min-w-0">
-              {/* Primary Controls Row */}
-              <div className="flex items-center justify-center gap-1 md:gap-2 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={skipBackward}
-                  className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 h-8 px-2 md:px-3 flex-shrink-0"
-                  title="Skip back 10 seconds"
-                >
-                  <SkipBack className="w-4 h-4" />
-                  <span className="ml-1 text-xs hidden sm:inline">10s</span>
-                </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={togglePlayPause}
-                  className="bg-blue-600 text-white border-blue-500 hover:bg-blue-700 h-8 px-3 md:px-4 flex-shrink-0"
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={skipForward}
-                  className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 h-8 px-2 md:px-3 flex-shrink-0"
-                  title="Skip forward 10 seconds"
-                >
-                  <SkipForward className="w-4 h-4" />
-                  <span className="ml-1 text-xs hidden sm:inline">10s</span>
-                </Button>
-              </div>
-
-              {/* Secondary Controls Row - Stacks vertically on very wide screens */}
-              <div className="flex flex-col xl:flex-row items-center justify-center gap-2 xl:gap-4">
-                {/* Volume Control */}
-                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleMute}
-                    className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 h-8 px-2 flex-shrink-0"
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </Button>
-                  <div className="w-12 md:w-14 lg:w-16 relative flex-shrink-0">
-                    <div 
-                      className="h-2 w-full bg-slate-600 rounded-full cursor-pointer overflow-hidden"
-                      onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-                        const newVolume = percentage / 100;
-                        if (videoRef.current) {
-                          videoRef.current.volume = newVolume;
-                          setVolume(newVolume);
-                        }
-                      }}
-                    >
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-200 ease-out"
-                        style={{ width: `${volume * 100}%` }}
-                      />
-                    </div>
-                    <div
-                      className="absolute top-1/2 transform -translate-y-1/2 h-3 w-3 bg-white rounded-full shadow-md cursor-pointer transition-all duration-200 hover:scale-110"
-                      style={{ left: `calc(${volume * 100}% - 6px)` }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const startX = e.clientX;
-                        const startVolume = volume;
-                        
-                        const handleMouseMove = (moveEvent: MouseEvent) => {
-                          const rect = (e.target as HTMLElement).parentElement?.getBoundingClientRect();
-                          if (!rect) return;
-                          
-                          const deltaX = moveEvent.clientX - startX;
-                          const deltaVolume = deltaX / rect.width;
-                          const newVolume = Math.max(0, Math.min(1, startVolume + deltaVolume));
-                          
-                          if (videoRef.current) {
-                            videoRef.current.volume = newVolume;
-                            setVolume(newVolume);
-                          }
-                        };
-                        
-                        const handleMouseUp = () => {
-                          document.removeEventListener('mousemove', handleMouseMove);
-                          document.removeEventListener('mouseup', handleMouseUp);
-                        };
-                        
-                        document.addEventListener('mousemove', handleMouseMove);
-                        document.addEventListener('mouseup', handleMouseUp);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Speed Control */}
-                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                  <span className="text-xs md:text-sm text-slate-300 hidden lg:inline">Speed:</span>
-                  <Select value={playbackRate.toString()} onValueChange={(value) => changePlaybackRate(parseFloat(value))}>
-                    <SelectTrigger className="w-12 md:w-14 lg:w-16 h-8 bg-slate-700 border-slate-600 text-white text-xs flex-shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0.5">0.5x</SelectItem>
-                      <SelectItem value="0.75">0.75x</SelectItem>
-                      <SelectItem value="1">1x</SelectItem>
-                      <SelectItem value="1.25">1.25x</SelectItem>
-                      <SelectItem value="1.5">1.5x</SelectItem>
-                      <SelectItem value="2">2x</SelectItem>
-                      <SelectItem value="4">4x</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1517,8 +1476,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                     </div>
                   )}
 
-              {/* User Thumbnail Gallery */}
-              {userThumbnails.length > 0 && (
+              {/* User Thumbnail Gallery - Only for From Video and Upload Image tabs */}
+              {userThumbnails.length > 0 && (thumbnailMode === 'timeline' || thumbnailMode === 'gallery') && (
                 <div className="mt-6">
                   <h4 className="font-semibold text-gray-900 mb-4">🖼️ Your Thumbnail Collection</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1536,8 +1495,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           <img
                             src={thumbnail}
                             alt={`Thumbnail ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
+                            className="w-full h-full object-cover"
+                          />
                           
                           {/* Selection indicator */}
                           {customThumbnail === thumbnail && (
@@ -1545,7 +1504,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
-          </div>
+                            </div>
                           )}
                           
                           {/* Hover overlay */}
@@ -1572,7 +1531,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                               >
                                 <X className="w-3 h-3" />
                               </Button>
-      </div>
+                            </div>
                           </div>
                         </div>
                       </div>
