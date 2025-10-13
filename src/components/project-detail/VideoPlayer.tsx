@@ -19,6 +19,9 @@ interface VideoPlayerProps {
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpdate, onLogoUpdate, onPublishAllScenes, updatedThumbnails }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [thumbnailIsPlaying, setThumbnailIsPlaying] = useState(false);
+  const [thumbnailVideoLoaded, setThumbnailVideoLoaded] = useState(false);
+  const [mainVideoLoaded, setMainVideoLoaded] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -49,6 +52,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
   // Get current scene data
   const currentScene = scenes[selectedScene];
+
+  // Force video to load when component mounts or scene changes
+  useEffect(() => {
+    setMainVideoLoaded(false);
+    if (videoRef.current) {
+      console.log('🔄 Forcing video reload for scene:', selectedScene, currentScene?.videoUrl);
+      videoRef.current.load();
+    }
+  }, [selectedScene, currentScene?.videoUrl]);
 
   // Convert duration string to seconds
   const durationToSeconds = (durationStr: string) => {
@@ -493,24 +505,85 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
   return (
     <div className="w-full bg-black flex flex-col p-2 md:p-4 overflow-y-auto overflow-x-hidden h-full min-w-0 max-w-full">
+      {/* Publish Button - Top */}
+      {onPublishAllScenes && (
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={onPublishAllScenes}
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2.5"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="font-medium">Publish</span>
+          </Button>
+        </div>
+      )}
+      
       {/* Video Player */}
       <div className="flex flex-col min-h-0 min-w-0">
         {/* Main Video Container */}
         <div className="relative bg-black rounded-md md:rounded-lg group w-full min-w-0">
+          {/* Fallback image if video fails to load */}
+          {!mainVideoLoaded && (
+            <div className="w-full h-64 md:h-80 flex items-center justify-center bg-gray-900 rounded-md absolute inset-0 z-10">
+              <div className="text-center text-white">
+                <div className="text-4xl mb-2">🎬</div>
+                <p className="text-sm">Loading video...</p>
+                <p className="text-xs text-gray-400 mt-1">Scene {selectedScene + 1}</p>
+              </div>
+            </div>
+          )}
           <video
             ref={videoRef}
+            src={currentScene?.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
             className="w-full h-auto cursor-pointer"
             poster={getCurrentThumbnail()}
             muted={isMuted}
-            preload="metadata"
+            preload="auto"
+            autoPlay={false}
+            playsInline
+            controls={false}
             onClick={togglePlayPause}
+            onLoadedMetadata={() => {
+              if (videoRef.current) {
+                setDuration(videoRef.current.duration);
+                setMainVideoLoaded(true);
+                console.log('✅ Main video metadata loaded - Duration:', videoRef.current.duration);
+                console.log('📺 Main video dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
+              }
+            }}
+            onTimeUpdate={() => {
+              if (videoRef.current) {
+                setCurrentTime(videoRef.current.currentTime);
+              }
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => setIsPlaying(false)}
+            onError={(e) => {
+              console.error('❌ Main video error:', e);
+              console.error('❌ Main video src:', currentScene?.videoUrl);
+              console.error('❌ Video error details:', {
+                error: e.currentTarget.error,
+                networkState: e.currentTarget.networkState,
+                readyState: e.currentTarget.readyState
+              });
+            }}
+            onLoadStart={() => {
+              console.log('🎬 Main video load started:', currentScene?.videoUrl);
+            }}
+            onCanPlay={() => {
+              console.log('🎮 Main video can play');
+            }}
             style={{ 
               backgroundColor: '#000000',
               maxHeight: '60vh',
-              minHeight: '200px'
+              minHeight: '200px',
+              width: '100%',
+              height: 'auto',
+              display: 'block'
             }}
           >
-            <source src={currentScene.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           
@@ -613,19 +686,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               <Button
                 onClick={() => setShowVerticalPreview(true)}
                 size="sm"
-                variant="outline"
-                className="border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
               >
                 <Eye className="w-3 h-3 flex-shrink-0" />
-                <span className="hidden sm:inline truncate">Preview</span>
+                <span className="hidden sm:inline truncate">Vertical Preview</span>
                 <span className="sm:hidden">P</span>
               </Button>
               
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => setShowLogoSettings(true)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
               >
                 <span className="flex-shrink-0">🏷️</span>
                 <span className="hidden sm:inline truncate">Logo</span>
@@ -633,10 +704,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               </Button>
               
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => setShowThumbnails(true)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
               >
                 <span className="flex-shrink-0">🎨</span>
                 <span className="hidden sm:inline truncate">Custom</span>
@@ -824,25 +894,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </div>
       </div>
 
-      {/* Scene Info */}
-      <div className="mt-3 px-2 w-full min-w-0">
-        <div className="flex items-center justify-between gap-2 w-full min-w-0">
-          <p className="text-sm md:text-base text-slate-300 font-medium flex-shrink-0 min-w-0">Scene {selectedScene + 1} Preview</p>
-          {onPublishAllScenes && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                onClick={onPublishAllScenes}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-3 md:px-4"
-              >
-                <Upload className="w-4 h-4" />
-                <span className="hidden sm:inline">Publish</span>
-              </Button>
-            </div>
-          )}
-        </div>
-        {customThumbnail && (
-          <div className="mt-2 flex items-center justify-center gap-2">
+      {/* Custom Thumbnail Status */}
+      {customThumbnail && (
+        <div className="mt-6 px-4 w-full">
+          <div className="flex items-center justify-center gap-2">
             <span className="text-xs text-green-400">✅ Custom thumbnail set</span>
             <Button
               variant="outline"
@@ -853,8 +908,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               Reset
             </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
 
       {/* Enhanced Thumbnail Selection Modal */}
@@ -923,13 +978,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
               {/* Vertical Video Layouts */}
               {thumbnailMode === 'preset' && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="text-center">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">📱 Vertical Video Layouts</h3>
                     <p className="text-gray-600">Choose your preferred vertical video layout style</p>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {/* Layout 1: Focused on One */}
                     <div
                       onClick={() => selectVerticalLayout('focused-on-one')}
@@ -947,8 +1002,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           </div>
                         </div>
                       </div>
-                      <div className="p-3 text-center">
-                        <h5 className="font-medium text-gray-900 text-sm">Focused on One</h5>
+                      <div className="p-2 text-center">
+                        <h5 className="font-medium text-gray-900 text-xs">Focused on One</h5>
                         {selectedVerticalLayout === 'focused-on-one' && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
                         )}
@@ -975,8 +1030,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           </div>
                         </div>
                       </div>
-                      <div className="p-3 text-center">
-                        <h5 className="font-medium text-gray-900 text-sm">Half and Half</h5>
+                      <div className="p-2 text-center">
+                        <h5 className="font-medium text-gray-900 text-xs">Half and Half</h5>
                         {selectedVerticalLayout === 'half-and-half' && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
                         )}
@@ -999,8 +1054,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           <span className="text-white text-lg">👤</span>
                         </div>
                       </div>
-                      <div className="p-3 text-center">
-                        <h5 className="font-medium text-gray-900 text-sm">Picture in Picture</h5>
+                      <div className="p-2 text-center">
+                        <h5 className="font-medium text-gray-900 text-xs">Picture in Picture</h5>
                         {selectedVerticalLayout === 'picture-in-picture' && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
                         )}
@@ -1022,8 +1077,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           <span className="text-white text-2xl">📺</span>
                         </div>
                       </div>
-                      <div className="p-3 text-center">
-                        <h5 className="font-medium text-gray-900 text-sm">Full Screen</h5>
+                      <div className="p-2 text-center">
+                        <h5 className="font-medium text-gray-900 text-xs">Full Screen</h5>
                         {selectedVerticalLayout === 'full-screen' && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
                         )}
@@ -1050,8 +1105,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           </div>
                         </div>
                       </div>
-                      <div className="p-3 text-center">
-                        <h5 className="font-medium text-gray-900 text-sm">Split Screen</h5>
+                      <div className="p-2 text-center">
+                        <h5 className="font-medium text-gray-900 text-xs">Split Screen</h5>
                         {selectedVerticalLayout === 'split-screen' && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
                         )}
@@ -1073,8 +1128,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           <span className="text-gray-600 text-2xl">⚙️</span>
                         </div>
                       </div>
-                      <div className="p-3 text-center">
-                        <h5 className="font-medium text-gray-900 text-sm">Custom</h5>
+                      <div className="p-2 text-center">
+                        <h5 className="font-medium text-gray-900 text-xs">Custom</h5>
                         {selectedVerticalLayout === 'custom' && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
                         )}
@@ -1100,16 +1155,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                       </div>
                     </div>
 
-                    <div className="mb-6">
-                      <div className="relative">
+                    <div className="mb-6 flex justify-center">
+                      <div className="relative max-w-md">
                         <video
                           ref={thumbnailVideoRef}
                           src={currentScene?.videoUrl}
                           poster={currentScene?.thumbnail}
-              className="w-full h-full object-cover"
+                          className="object-cover rounded-lg shadow-lg cursor-pointer"
                           style={{ 
                             aspectRatio: aspectRatio === '16:9' ? '16/9' : aspectRatio === '9:16' ? '9/16' : '1/1',
-                            minHeight: '200px'
+                            width: aspectRatio === '9:16' ? '250px' : aspectRatio === '16:9' ? '400px' : '350px',
+                            height: 'auto'
                           }}
                           preload="metadata"
                           controls={false}
@@ -1127,10 +1183,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           }}
                           onCanPlay={() => {
                             console.log('🎮 Thumbnail video can play');
+                            // Reset playing state when video is ready
+                            setThumbnailIsPlaying(false);
+                            setThumbnailVideoLoaded(true);
+                            console.log('📹 Video element ready:', thumbnailVideoRef.current?.readyState);
                           }}
                           onError={(e) => {
                             console.error('❌ Thumbnail video error:', e);
                             console.error('❌ Thumbnail video src:', currentScene?.videoUrl);
+                            console.error('❌ Video error details:', {
+                              error: e.currentTarget.error,
+                              networkState: e.currentTarget.networkState,
+                              readyState: e.currentTarget.readyState
+                            });
                           }}
                           onTimeUpdate={() => {
                             if (thumbnailVideoRef.current) {
@@ -1138,7 +1203,40 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                             }
                           }}
                           onEnded={() => {
-                            setIsPlaying(false);
+                            setThumbnailIsPlaying(false);
+                          }}
+                          onPlay={() => {
+                            setThumbnailIsPlaying(true);
+                          }}
+                          onPause={() => {
+                            setThumbnailIsPlaying(false);
+                          }}
+                          onClick={() => {
+                            console.log('🖱️ Video clicked');
+                            console.log('📹 Video element:', thumbnailVideoRef.current);
+                            console.log('▶️ Current playing state:', thumbnailIsPlaying);
+                            console.log('📥 Video loaded:', thumbnailVideoLoaded);
+                            
+                            if (thumbnailVideoRef.current && thumbnailVideoLoaded) {
+                              if (thumbnailIsPlaying) {
+                                console.log('⏸️ Pausing video via click');
+                                thumbnailVideoRef.current.pause();
+                                setThumbnailIsPlaying(false);
+                              } else {
+                                console.log('▶️ Playing video via click');
+                                thumbnailVideoRef.current.play().then(() => {
+                                  console.log('✅ Video play started successfully via click');
+                                }).catch((error) => {
+                                  console.error('❌ Video play failed via click:', error);
+                                });
+                                setThumbnailIsPlaying(true);
+                              }
+                            } else {
+                              console.error('❌ Video ref is null or not loaded on click:', {
+                                videoRef: !!thumbnailVideoRef.current,
+                                loaded: thumbnailVideoLoaded
+                              });
+                            }
                           }}
                         />
                         
@@ -1197,19 +1295,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => {
-                                  if (thumbnailVideoRef.current) {
-                                    if (isPlaying) {
+                                  console.log('🎮 Play/Pause button clicked');
+                                  console.log('📹 Video element:', thumbnailVideoRef.current);
+                                  console.log('▶️ Current playing state:', thumbnailIsPlaying);
+                                  console.log('📥 Video loaded:', thumbnailVideoLoaded);
+                                  
+                                  if (thumbnailVideoRef.current && thumbnailVideoLoaded) {
+                                    if (thumbnailIsPlaying) {
+                                      console.log('⏸️ Pausing video');
                                       thumbnailVideoRef.current.pause();
-                                      setIsPlaying(false);
+                                      setThumbnailIsPlaying(false);
                                     } else {
-                                      thumbnailVideoRef.current.play();
-                                      setIsPlaying(true);
+                                      console.log('▶️ Playing video');
+                                      thumbnailVideoRef.current.play().then(() => {
+                                        console.log('✅ Video play started successfully');
+                                      }).catch((error) => {
+                                        console.error('❌ Video play failed:', error);
+                                      });
+                                      setThumbnailIsPlaying(true);
                                     }
+                                  } else {
+                                    console.error('❌ Video ref is null or not loaded:', {
+                                      videoRef: !!thumbnailVideoRef.current,
+                                      loaded: thumbnailVideoLoaded
+                                    });
                                   }
                                 }}
                                 className="text-white hover:bg-white/20"
                               >
-                                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                {thumbnailIsPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                               </Button>
                               <Button
                                 size="sm"
@@ -1422,8 +1536,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           <img
                             src={thumbnail}
                             alt={`Thumbnail ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
+              className="w-full h-full object-cover"
+            />
                           
                           {/* Selection indicator */}
                           {customThumbnail === thumbnail && (
@@ -1431,7 +1545,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
-                            </div>
+          </div>
                           )}
                           
                           {/* Hover overlay */}
@@ -1458,7 +1572,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                               >
                                 <X className="w-3 h-3" />
                               </Button>
-                            </div>
+      </div>
                           </div>
                         </div>
                       </div>
@@ -1486,179 +1600,144 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                       {/* No Captions */}
                       <div
                         onClick={() => selectCaptionStyle('none')}
-                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                        className={`cursor-pointer group border-2 rounded-lg transition-all duration-200 hover:shadow-md bg-white p-4 ${
                           selectedCaptionStyle === 'none' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-500'
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                            : 'border-gray-200 hover:border-blue-300'
                         }`}
                       >
-                        <div className="aspect-[9/16] bg-gradient-to-br from-blue-400 to-blue-600 relative">
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-white text-2xl">🎥</span>
-                          </div>
-                        </div>
-                        <div className="p-3 text-center">
-                          <h5 className="font-medium text-gray-900 text-sm">No Captions</h5>
-                          {selectedCaptionStyle === 'none' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
-                          )}
-                        </div>
+                        <h5 className={`font-medium text-sm mb-3 ${
+                          selectedCaptionStyle === 'none' ? 'text-blue-900' : 'text-gray-900'
+                        }`}>No Captions</h5>
+                        <p className={`text-xs ${
+                          selectedCaptionStyle === 'none' ? 'text-blue-700' : 'text-gray-500'
+                        }`}>No text overlays on video</p>
                       </div>
 
                       {/* Minimal Style */}
                       <div
                         onClick={() => selectCaptionStyle('minimal')}
-                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                        className={`cursor-pointer group border-2 rounded-lg transition-all duration-200 hover:shadow-md bg-white p-4 ${
                           selectedCaptionStyle === 'minimal' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-500'
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                            : 'border-gray-200 hover:border-blue-300'
                         }`}
                       >
-                        <div className="aspect-[9/16] bg-gradient-to-br from-gray-400 to-gray-600 relative">
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <div className="text-white text-xs text-center">
-                              This is an example text with{' '}
-                              <span className="bg-gray-200 text-gray-800 px-1 rounded">highlighted</span>{' '}
-                              word example.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-3 text-center">
-                          <h5 className="font-medium text-gray-900 text-sm">Minimal</h5>
-                          {selectedCaptionStyle === 'minimal' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
-                          )}
-                        </div>
+                        <h5 className={`font-medium text-sm mb-3 ${
+                          selectedCaptionStyle === 'minimal' ? 'text-blue-900' : 'text-gray-900'
+                        }`}>Minimal</h5>
+                        <p className={`text-xs leading-relaxed ${
+                          selectedCaptionStyle === 'minimal' ? 'text-blue-700' : 'text-gray-500'
+                        }`}>
+                          This is an example text with{' '}
+                          <span className="bg-gray-100 text-gray-700 px-1 rounded">highlighted</span>{' '}
+                          word example.
+                        </p>
                       </div>
 
                       {/* Modern Style */}
                       <div
                         onClick={() => selectCaptionStyle('modern')}
-                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                        className={`cursor-pointer group border-2 rounded-lg transition-all duration-200 hover:shadow-md bg-white p-4 ${
                           selectedCaptionStyle === 'modern' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-500'
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                            : 'border-gray-200 hover:border-blue-300'
                         }`}
                       >
-                        <div className="aspect-[9/16] bg-gradient-to-br from-green-400 to-green-600 relative">
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <div className="text-white text-xs text-center">
-                              This is an example text with{' '}
-                              <span className="bg-blue-100 text-blue-800 px-1 py-0.5 rounded-md font-medium">highlighted</span>{' '}
-                              word example.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-3 text-center">
-                          <h5 className="font-medium text-gray-900 text-sm">Modern</h5>
-                          {selectedCaptionStyle === 'modern' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
-                          )}
-                        </div>
+                        <h5 className={`font-medium text-sm mb-3 ${
+                          selectedCaptionStyle === 'modern' ? 'text-blue-900' : 'text-gray-900'
+                        }`}>Modern</h5>
+                        <p className={`text-xs leading-relaxed ${
+                          selectedCaptionStyle === 'modern' ? 'text-blue-700' : 'text-gray-500'
+                        }`}>
+                          This is an example text with{' '}
+                          <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md font-medium shadow-sm">highlighted</span>{' '}
+                          word example.
+                        </p>
                       </div>
 
                       {/* Bold Style */}
                       <div
                         onClick={() => selectCaptionStyle('bold')}
-                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                        className={`cursor-pointer group border-2 rounded-lg transition-all duration-200 hover:shadow-md bg-white p-4 ${
                           selectedCaptionStyle === 'bold' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-500'
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                            : 'border-gray-200 hover:border-blue-300'
                         }`}
                       >
-                        <div className="aspect-[9/16] bg-gradient-to-br from-purple-400 to-purple-600 relative">
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <div className="text-white text-xs text-center">
-                              This is an example text with{' '}
-                              <span className="bg-yellow-400 text-gray-900 px-1 py-0.5 border border-yellow-500 font-bold">highlighted</span>{' '}
-                              word example.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-3 text-center">
-                          <h5 className="font-medium text-gray-900 text-sm">Bold</h5>
-                          {selectedCaptionStyle === 'bold' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
-                          )}
-                        </div>
+                        <h5 className={`font-medium text-sm mb-3 ${
+                          selectedCaptionStyle === 'bold' ? 'text-blue-900' : 'text-gray-900'
+                        }`}>Bold</h5>
+                        <p className={`text-xs leading-relaxed ${
+                          selectedCaptionStyle === 'bold' ? 'text-blue-700' : 'text-gray-500'
+                        }`}>
+                          This is an example text with{' '}
+                          <span className="bg-yellow-400 text-gray-900 px-2 py-0.5 border border-yellow-500 font-bold">highlighted</span>{' '}
+                          word example.
+                        </p>
                       </div>
 
                       {/* Elegant Style */}
                       <div
                         onClick={() => selectCaptionStyle('elegant')}
-                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                        className={`cursor-pointer group border-2 rounded-lg transition-all duration-200 hover:shadow-md bg-white p-4 ${
                           selectedCaptionStyle === 'elegant' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-500'
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                            : 'border-gray-200 hover:border-blue-300'
                         }`}
                       >
-                        <div className="aspect-[9/16] bg-gradient-to-br from-pink-400 to-pink-600 relative">
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <div className="text-white text-xs text-center">
-                              This is an example text with{' '}
-                              <span className="bg-purple-100 text-purple-800 px-1 py-0.5 rounded-full">highlighted</span>{' '}
-                              word example.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-3 text-center">
-                          <h5 className="font-medium text-gray-900 text-sm">Elegant</h5>
-                          {selectedCaptionStyle === 'elegant' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
-                          )}
-                        </div>
+                        <h5 className={`font-medium text-sm mb-3 ${
+                          selectedCaptionStyle === 'elegant' ? 'text-blue-900' : 'text-gray-900'
+                        }`}>Elegant</h5>
+                        <p className={`text-xs leading-relaxed ${
+                          selectedCaptionStyle === 'elegant' ? 'text-blue-700' : 'text-gray-500'
+                        }`}>
+                          This is an example text with{' '}
+                          <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">highlighted</span>{' '}
+                          word example.
+                        </p>
                       </div>
 
                       {/* Neon Style */}
                       <div
                         onClick={() => selectCaptionStyle('neon')}
-                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                        className={`cursor-pointer group border-2 rounded-lg transition-all duration-200 hover:shadow-md bg-white p-4 ${
                           selectedCaptionStyle === 'neon' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-500'
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                            : 'border-gray-200 hover:border-blue-300'
                         }`}
                       >
-                        <div className="aspect-[9/16] bg-gradient-to-br from-indigo-400 to-indigo-600 relative">
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <div className="text-white text-xs text-center">
-                              This is an example text with{' '}
-                              <span className="bg-green-400 text-gray-900 px-1 py-0.5 font-bold shadow-md">highlighted</span>{' '}
-                              word example.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-3 text-center">
-                          <h5 className="font-medium text-gray-900 text-sm">Neon</h5>
-                          {selectedCaptionStyle === 'neon' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
-                          )}
-                        </div>
+                        <h5 className={`font-medium text-sm mb-3 ${
+                          selectedCaptionStyle === 'neon' ? 'text-blue-900' : 'text-gray-900'
+                        }`}>Neon</h5>
+                        <p className={`text-xs leading-relaxed ${
+                          selectedCaptionStyle === 'neon' ? 'text-blue-700' : 'text-gray-500'
+                        }`}>
+                          This is an example text with{' '}
+                          <span className="bg-green-400 text-gray-900 px-2 py-0.5 font-bold shadow-md">highlighted</span>{' '}
+                          word example.
+                        </p>
                       </div>
 
                       {/* Retro Style */}
                       <div
                         onClick={() => selectCaptionStyle('retro')}
-                        className={`cursor-pointer group border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md bg-white ${
+                        className={`cursor-pointer group border-2 rounded-lg transition-all duration-200 hover:shadow-md bg-white p-4 ${
                           selectedCaptionStyle === 'retro' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-500'
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                            : 'border-gray-200 hover:border-blue-300'
                         }`}
                       >
-                        <div className="aspect-[9/16] bg-gradient-to-br from-orange-400 to-orange-600 relative">
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <div className="text-white text-xs text-center">
-                              This is an example text with{' '}
-                              <span className="bg-orange-300 text-gray-900 px-1 py-0.5 border border-orange-400 font-bold">highlighted</span>{' '}
-                              word example.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-3 text-center">
-                          <h5 className="font-medium text-gray-900 text-sm">Retro</h5>
-                          {selectedCaptionStyle === 'retro' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-2"></div>
-                          )}
-                        </div>
+                        <h5 className={`font-medium text-sm mb-3 ${
+                          selectedCaptionStyle === 'retro' ? 'text-blue-900' : 'text-gray-900'
+                        }`}>Retro</h5>
+                        <p className={`text-xs leading-relaxed ${
+                          selectedCaptionStyle === 'retro' ? 'text-blue-700' : 'text-gray-500'
+                        }`}>
+                          This is an example text with{' '}
+                          <span className="bg-orange-300 text-gray-900 px-2 py-0.5 border border-orange-400 font-bold">highlighted</span>{' '}
+                          word example.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1763,22 +1842,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
       {/* Vertical Preview Modal */}
       <Dialog open={showVerticalPreview} onOpenChange={setShowVerticalPreview}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="max-w-lg max-h-[70vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Vertical Format Preview
+            <DialogTitle className="flex items-center gap-2 text-sm">
+              <Eye className="w-4 h-4" />
+              Vertical Thumbnail
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-2">
             {/* Preview Container */}
             <div className="bg-black rounded-lg p-4 flex justify-center">
-              <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ width: '200px', height: '355px' }}>
+              <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ width: '180px', height: '320px' }}>
                 {/* Vertical Video Preview */}
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
                   <div className="text-center text-white">
-                    <div className="mb-4">
+                    <div className="mb-2">
                       <video
                         src={currentScene?.videoUrl}
                         className="w-full h-auto max-h-full object-cover rounded"
@@ -1807,64 +1886,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                     <img
                       src={logoWatermark.image}
                       alt="Logo"
-                      className="w-8 h-8 object-contain"
+                      className="w-4 h-4 object-contain"
                     />
                   </div>
                 )}
               </div>
             </div>
             
-            {/* Vertical Thumbnail Selection */}
+            {/* Thumbnail Selection Button */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h4 className="font-medium text-gray-900 mb-3">📸 Vertical Thumbnail</h4>
-              <div className="space-y-3">
-                {/* Current Vertical Thumbnail Preview */}
-                {verticalThumbnail && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <img
-                      src={verticalThumbnail}
-                      alt="Vertical thumbnail"
-                      className="w-16 h-28 object-cover rounded border border-gray-300"
-                      style={{ aspectRatio: '9/16' }}
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Custom Vertical Thumbnail</p>
-                      <p className="text-xs text-gray-500">9:16 aspect ratio</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setVerticalThumbnail(null)}
-                      className="text-red-600 border-red-300 hover:bg-red-50"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Thumbnail Selection Options */}
-                <div className="flex gap-2">
-                  <Button
-                    onClick={captureVerticalFrameFromVideo}
-                    size="sm"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    📸 Capture from Video
-                  </Button>
-                  <Button
-                    onClick={() => verticalUploadRef.current?.click()}
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    📁 Upload Image
-                  </Button>
-                </div>
-                
-                <p className="text-xs text-gray-500">
-                  💡 Capture the perfect frame from your video or upload a custom vertical thumbnail (9:16 ratio)
-                </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={captureVerticalFrameFromVideo}
+                  size="sm"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  📸 Capture from Video
+                </Button>
+                <Button
+                  onClick={() => verticalUploadRef.current?.click()}
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                >
+                  📁 Upload Image
+                </Button>
               </div>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                💡 Capture the perfect frame from your video or upload a custom vertical thumbnail (9:16 ratio)
+              </p>
             </div>
             
           </div>

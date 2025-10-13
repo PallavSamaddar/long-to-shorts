@@ -4,7 +4,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { X, Building2 } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
 interface LogoWatermarkProps {
   onLogoChange: (logo: {
@@ -89,17 +89,9 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
     });
   };
 
-  const removeLogo = () => {
-    setSelectedLogo(null);
-    onLogoChange({
-      image: null,
-      position: 'top-right',
-      opacity: 0.5
-    });
-  };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Logo Selection Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         
@@ -158,67 +150,46 @@ const LogoWatermark: React.FC<LogoWatermarkProps> = ({ onLogoChange, currentLogo
             </div>
           </div>
 
-        {/* Current Logo Preview */}
-        {selectedLogo && (
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="mb-3">
-              <img
-                src={selectedLogo}
-                alt="Selected logo"
-                className="w-24 h-24 object-contain mx-auto rounded-lg border-2 border-gray-200"
-              />
-            </div>
-            <Button
-              onClick={removeLogo}
-              variant="outline"
-              size="sm"
-              className="text-red-600 border-red-300 hover:bg-red-50"
-            >
-              <X className="w-4 h-4 mr-2" />
-              Remove Logo
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Position Settings - Always Visible */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h4 className="font-semibold text-gray-900 mb-4">📍 Logo Position</h4>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h4 className="font-semibold text-gray-900 mb-3">📍 Logo Position</h4>
+          <div className="grid grid-cols-4 gap-2">
             <Button
               variant={currentLogo.position === 'top-left' ? 'default' : 'outline'}
               onClick={() => handlePositionChange('top-left')}
-              className="w-full h-12 flex items-center justify-center gap-2"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 text-xs"
             >
-              <span>↖️</span>
-              Top Left
+              <span className="text-lg">↖️</span>
+              <span>Top Left</span>
             </Button>
             <Button
               variant={currentLogo.position === 'top-right' ? 'default' : 'outline'}
               onClick={() => handlePositionChange('top-right')}
-              className="w-full h-12 flex items-center justify-center gap-2"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 text-xs"
             >
-              <span>↗️</span>
-              Top Right
+              <span className="text-lg">↗️</span>
+              <span>Top Right</span>
             </Button>
             <Button
               variant={currentLogo.position === 'bottom-left' ? 'default' : 'outline'}
               onClick={() => handlePositionChange('bottom-left')}
-              className="w-full h-12 flex items-center justify-center gap-2"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 text-xs"
             >
-              <span>↙️</span>
-              Bottom Left
+              <span className="text-lg">↙️</span>
+              <span>Bottom Left</span>
             </Button>
             <Button
               variant={currentLogo.position === 'bottom-right' ? 'default' : 'outline'}
               onClick={() => handlePositionChange('bottom-right')}
-              className="w-full h-12 flex items-center justify-center gap-2"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 text-xs"
             >
-              <span>↘️</span>
-              Bottom Right
+              <span className="text-lg">↘️</span>
+              <span>Bottom Right</span>
             </Button>
           </div>
-          <p className="text-xs text-gray-500 mt-3">
+          <p className="text-xs text-gray-500 mt-2">
             Choose where to place the logo on your video
           </p>
         </div>
