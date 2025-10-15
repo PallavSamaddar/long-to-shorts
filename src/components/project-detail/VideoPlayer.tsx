@@ -504,11 +504,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="w-full bg-black flex flex-col p-2 md:p-4 overflow-y-auto overflow-x-hidden h-full min-w-0 max-w-full">
+    <div className="w-full flex flex-col overflow-y-auto overflow-x-hidden h-full min-w-0 max-w-full">
       {/* Video Player */}
       <div className="flex flex-col min-h-0 min-w-0">
         {/* Main Video Container */}
-        <div className="relative bg-black rounded-md md:rounded-lg group w-full min-w-0">
+        <div className="relative bg-black rounded-lg group w-full min-w-0 shadow-lg">
           {/* Fallback image if video fails to load */}
           {!mainVideoLoaded && (
             <div className="w-full h-64 md:h-80 flex items-center justify-center bg-gray-900 rounded-md absolute inset-0 z-10">
@@ -598,19 +598,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </div>
 
         {/* Video Controls Section */}
-        <div className="mt-4 space-y-4 flex-shrink-0 min-h-0">
-          {/* Progress Bar Section */}
-          <div className="bg-slate-800 rounded-lg p-3 md:p-4 mt-4 flex-shrink-0 w-full min-w-0">
-            <div className="flex items-center gap-3 w-full min-w-0">
-              {/* Time Display */}
-              <span className="text-sm text-slate-300 font-medium min-w-[45px] flex-shrink-0">
-                {formatTime(currentTime)}
-              </span>
+        <div className="mt-3 flex-shrink-0 min-h-0">
+          {/* Enhanced Progress Bar Section */}
+          <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-t-xl rounded-b-none p-3 flex-shrink-0 w-full min-w-0 shadow-lg border border-slate-700 border-b-0">
+            <div className="flex items-center gap-4 w-full min-w-0">
+              {/* Play/Pause Button */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  onClick={togglePlayPause}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 text-slate-200 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                >
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </Button>
+                <span className="text-sm text-slate-200 font-mono min-w-[50px]">
+                  {formatTime(currentTime)}
+                </span>
+              </div>
               
-              {/* Progress Bar */}
+              {/* Enhanced Progress Bar */}
               <div className="flex-1 relative min-w-0">
                 <div 
-                  className="h-2 w-full bg-slate-600 rounded-full cursor-pointer overflow-hidden touch-none"
+                  className="h-3 w-full bg-slate-700 rounded-full cursor-pointer overflow-hidden touch-none shadow-inner"
                   onClick={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const x = e.clientX - rect.left;
@@ -623,13 +633,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   }}
                 >
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-200 ease-out"
+                    className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400 rounded-full transition-all duration-300 ease-out shadow-sm"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
                 <div
-                  className="absolute top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full shadow-lg cursor-pointer transition-all duration-200 hover:scale-110"
-                  style={{ left: `calc(${progress}% - 8px)` }}
+                  className="absolute top-1/2 transform -translate-y-1/2 h-5 w-5 bg-white rounded-full shadow-xl cursor-pointer transition-all duration-200 hover:scale-125 hover:shadow-2xl border-2 border-blue-400"
+                  style={{ left: `calc(${progress}% - 10px)` }}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     const startX = e.clientX;
@@ -662,28 +672,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               </div>
               
               {/* Duration Display */}
-              <span className="text-sm text-slate-400 min-w-[45px] text-right flex-shrink-0">
+              <span className="text-sm text-slate-300 font-mono min-w-[50px] text-right flex-shrink-0">
                 {formatTime(duration)}
               </span>
               
-              {/* Control Buttons - Right Side */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Play/Pause Button */}
-                <Button
-                  onClick={togglePlayPause}
-                  size="sm"
-                  variant="ghost"
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-                
+              {/* Enhanced Control Buttons */}
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {/* Skip Buttons */}
                 <Button
                   onClick={skipBackward}
                   size="sm"
                   variant="ghost"
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200 hover:scale-105"
                   title="Skip backward 10s"
                 >
                   <SkipBack className="w-4 h-4" />
@@ -693,7 +693,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   onClick={skipForward}
                   size="sm"
                   variant="ghost"
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200 hover:scale-105"
                   title="Skip forward 10s"
                 >
                   <SkipForward className="w-4 h-4" />
@@ -704,49 +704,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   onClick={toggleMute}
                   size="sm"
                   variant="ghost"
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200 hover:scale-105"
                   title={isMuted ? "Unmute" : "Mute"}
                 >
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </Button>
                 
-                {/* Speed Controls */}
-                <div className="flex items-center gap-1 ml-2">
-                  <Button
-                    onClick={() => changePlaybackRate(1)}
-                    size="sm"
-                    variant={playbackRate === 1 ? "default" : "ghost"}
-                    className={`h-8 px-3 text-sm font-medium rounded-full transition-all duration-200 ${
-                      playbackRate === 1 
-                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
-                        : "text-slate-300 hover:text-white hover:bg-slate-700"
-                    }`}
-                    title="Normal speed"
-                  >
-                    1x
-                  </Button>
-                  
-                  <Button
-                    onClick={() => changePlaybackRate(2)}
-                    size="sm"
-                    variant={playbackRate === 2 ? "default" : "ghost"}
-                    className={`h-8 px-3 text-sm font-medium rounded-full transition-all duration-200 ${
-                      playbackRate === 2 
-                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
-                        : "text-slate-300 hover:text-white hover:bg-slate-700"
-                    }`}
-                    title="Double speed"
-                  >
-                    2x
-                  </Button>
+                {/* Speed Control Dropdown */}
+                <div className="flex items-center ml-2">
+                  <Select value={playbackRate.toString()} onValueChange={(value) => changePlaybackRate(parseFloat(value))}>
+                    <SelectTrigger className="w-16 h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs rounded-full hover:bg-slate-600 transition-colors">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="0.25" className="text-slate-200 hover:bg-slate-700">0.25x</SelectItem>
+                      <SelectItem value="0.5" className="text-slate-200 hover:bg-slate-700">0.5x</SelectItem>
+                      <SelectItem value="0.75" className="text-slate-200 hover:bg-slate-700">0.75x</SelectItem>
+                      <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">1x</SelectItem>
+                      <SelectItem value="1.25" className="text-slate-200 hover:bg-slate-700">1.25x</SelectItem>
+                      <SelectItem value="1.5" className="text-slate-200 hover:bg-slate-700">1.5x</SelectItem>
+                      <SelectItem value="1.75" className="text-slate-200 hover:bg-slate-700">1.75x</SelectItem>
+                      <SelectItem value="2" className="text-slate-200 hover:bg-slate-700">2x</SelectItem>
+                      <SelectItem value="2.5" className="text-slate-200 hover:bg-slate-700">2.5x</SelectItem>
+                      <SelectItem value="3" className="text-slate-200 hover:bg-slate-700">3x</SelectItem>
+                      <SelectItem value="3.5" className="text-slate-200 hover:bg-slate-700">3.5x</SelectItem>
+                      <SelectItem value="4" className="text-slate-200 hover:bg-slate-700">4x</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Publish Button - On Video Player Line */}
+                {/* Enhanced Publish Button */}
                 {onPublishAllScenes && (
                   <Button
                     onClick={onPublishAllScenes}
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white font-medium flex items-center gap-2 px-3 py-1 rounded-full transition-all duration-200 ml-2"
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ml-3 shadow-lg hover:shadow-xl hover:scale-105"
                     title="Publish Video"
                   >
                     <Upload className="w-4 h-4" />
@@ -757,40 +749,37 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
             </div>
           </div>
 
-          {/* Video Action Buttons */}
-          <div className="bg-slate-800 rounded-lg p-2 mt-4 flex-shrink-0 w-full min-w-0">
-            <div className="border-b border-slate-600 pb-2 mb-2">
-              <p className="text-xs text-slate-400 text-center">Video Actions</p>
+          {/* Simplified Video Action Buttons */}
+          <div className="bg-slate-800 rounded-b-xl p-3 flex-shrink-0 w-full min-w-0 -mt-1 rounded-t-none border border-slate-700 border-t-0">
+            <div className="flex items-center justify-center mb-2">
+              <h3 className="text-xs text-slate-400 font-medium">Video Actions</h3>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-1 w-full">
+            <div className="flex items-center justify-center gap-1 w-full">
               <Button
                 onClick={() => setShowVerticalPreview(true)}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+                className="bg-slate-700 hover:bg-blue-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
               >
-                <Eye className="w-3 h-3 flex-shrink-0" />
-                <span className="hidden sm:inline truncate">Vertical Preview</span>
-                <span className="sm:hidden">P</span>
+                <Eye className="w-3 h-3" />
+                <span>Vertical Preview</span>
               </Button>
               
               <Button
                 size="sm"
                 onClick={() => setShowLogoSettings(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+                className="bg-slate-700 hover:bg-purple-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
               >
-                <span className="flex-shrink-0">🏷️</span>
-                <span className="hidden sm:inline truncate">Logo</span>
-                <span className="sm:hidden">L</span>
+                <span className="text-xs">🏷️</span>
+                <span>Logo</span>
               </Button>
               
               <Button
                 size="sm"
                 onClick={() => setShowThumbnails(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+                className="bg-slate-700 hover:bg-pink-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
               >
-                <span className="flex-shrink-0">🎨</span>
-                <span className="hidden sm:inline truncate">Custom</span>
-                <span className="sm:hidden">C</span>
+                <span className="text-xs">🎨</span>
+                <span>Custom</span>
               </Button>
               
               <Button
@@ -839,11 +828,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                 }}
                 data-capture-btn
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1 px-2 py-1 text-xs min-w-0 flex-shrink"
+                className="bg-slate-700 hover:bg-emerald-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
               >
-                <span className="flex-shrink-0">📸</span>
-                <span className="hidden sm:inline truncate">Thumbnail</span>
-                <span className="sm:hidden">T</span>
+                <span className="text-xs">📸</span>
+                <span>Thumbnail</span>
               </Button>
 
             </div>
