@@ -54,116 +54,107 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const verticalUploadRef = useRef<HTMLInputElement>(null);
   const thumbnailVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Layout options data
+  // Layout options data - Enhanced with better names and clearer icons
   const layoutOptions = [
-    { id: 0, name: 'Single', icon: 'single' },
-    { id: 1, name: 'Two Columns', icon: 'two-columns' },
-    { id: 2, name: 'Two Rows', icon: 'two-rows' },
-    { id: 3, name: 'Main + 3 Side', icon: 'main-3side' },
-    { id: 4, name: 'Main + 4 Side', icon: 'main-4side' },
-    { id: 5, name: 'Main + Expand', icon: 'main-expand' },
-    { id: 6, name: 'Side + Main', icon: 'side-main' },
-    { id: 7, name: 'Side + Main + 2', icon: 'side-main-2' },
-    { id: 8, name: 'Three Columns', icon: 'three-columns' },
-    { id: 9, name: 'Two Columns Alt', icon: 'two-columns-alt' },
-    { id: 10, name: 'Single Alt', icon: 'single-alt' }
+    { id: 0, name: 'Single Full', icon: 'single-full' },
+    { id: 1, name: 'Split Vertical', icon: 'split-vertical' },
+    { id: 2, name: 'Split Horizontal', icon: 'split-horizontal' },
+    { id: 3, name: 'PIP Top-Right', icon: 'pip-top-right' },
+    { id: 4, name: 'PIP Bottom-Right', icon: 'pip-bottom-right' },
+    { id: 5, name: 'PIP Bottom-Left', icon: 'pip-bottom-left' },
+    { id: 6, name: 'PIP Top-Left', icon: 'pip-top-left' },
+    { id: 7, name: 'Sidebar Right', icon: 'sidebar-right' },
+    { id: 8, name: 'Sidebar Left', icon: 'sidebar-left' },
+    { id: 9, name: 'Header Layout', icon: 'header-layout' },
+    { id: 10, name: 'Footer Layout', icon: 'footer-layout' }
   ];
 
-  // Function to render layout icon - Enhanced to match image layouts
+  // Function to render layout icon - Enhanced with clear, descriptive icons
   const renderLayoutIcon = (iconType: string) => {
     const iconClass = "w-3 h-2";
     const rectClass = "bg-white rounded-sm";
+    const smallRectClass = "bg-white rounded-sm";
     
     switch (iconType) {
-      case 'single':
+      case 'single-full':
         return <div className={`${iconClass} ${rectClass}`}></div>;
-      case 'two-columns':
+      
+      case 'split-vertical':
         return (
           <div className={`${iconClass} flex gap-0.5`}>
             <div className={`w-1 ${rectClass}`}></div>
             <div className={`w-1 ${rectClass}`}></div>
           </div>
         );
-      case 'two-rows':
+      
+      case 'split-horizontal':
         return (
           <div className={`${iconClass} flex flex-col gap-0.5`}>
             <div className={`h-1 ${rectClass}`}></div>
             <div className={`h-1 ${rectClass}`}></div>
           </div>
         );
-      case 'main-3side':
+      
+      case 'pip-top-right':
+        return (
+          <div className={`${iconClass} relative ${rectClass}`}>
+            <div className="absolute top-0 right-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          </div>
+        );
+      
+      case 'pip-bottom-right':
+        return (
+          <div className={`${iconClass} relative ${rectClass}`}>
+            <div className="absolute bottom-0 right-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          </div>
+        );
+      
+      case 'pip-bottom-left':
+        return (
+          <div className={`${iconClass} relative ${rectClass}`}>
+            <div className="absolute bottom-0 left-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          </div>
+        );
+      
+      case 'pip-top-left':
+        return (
+          <div className={`${iconClass} relative ${rectClass}`}>
+            <div className="absolute top-0 left-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          </div>
+        );
+      
+      case 'sidebar-right':
         return (
           <div className={`${iconClass} flex gap-0.5`}>
             <div className={`w-2 ${rectClass}`}></div>
-            <div className="flex flex-col gap-0.5">
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-            </div>
+            <div className={`w-1 ${rectClass}`}></div>
           </div>
         );
-      case 'main-4side':
-        return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className={`w-2 ${rectClass}`}></div>
-            <div className="flex flex-col gap-0.5">
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-            </div>
-          </div>
-        );
-      case 'main-expand':
-        return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className={`w-2 ${rectClass}`}></div>
-            <div className="flex flex-col gap-0.5">
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className="w-1 h-0.5 bg-slate-400 rounded-sm flex items-center justify-center">
-                <div className="text-slate-600 text-xs">▶</div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'side-main':
+      
+      case 'sidebar-left':
         return (
           <div className={`${iconClass} flex gap-0.5`}>
             <div className={`w-1 ${rectClass}`}></div>
             <div className={`w-2 ${rectClass}`}></div>
           </div>
         );
-      case 'side-main-2':
+      
+      case 'header-layout':
         return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className="flex flex-col gap-0.5">
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-            </div>
-            <div className={`w-2 ${rectClass}`}></div>
-            <div className="flex flex-col gap-0.5">
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-              <div className={`w-1 h-0.5 ${rectClass}`}></div>
-            </div>
+          <div className={`${iconClass} flex flex-col gap-0.5`}>
+            <div className={`h-0.5 ${rectClass}`}></div>
+            <div className={`h-1.5 ${rectClass}`}></div>
           </div>
         );
-      case 'three-columns':
+      
+      case 'footer-layout':
         return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className={`w-1 ${rectClass}`}></div>
-            <div className={`w-1 ${rectClass}`}></div>
-            <div className={`w-1 ${rectClass}`}></div>
+          <div className={`${iconClass} flex flex-col gap-0.5`}>
+            <div className={`h-1.5 ${rectClass}`}></div>
+            <div className={`h-0.5 ${rectClass}`}></div>
           </div>
         );
-      case 'two-columns-alt':
-        return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className={`w-1.5 ${rectClass}`}></div>
-            <div className={`w-1 ${rectClass}`}></div>
-          </div>
-        );
-      case 'single-alt':
-        return <div className={`${iconClass} ${rectClass} border border-slate-300`}></div>;
+      
       default:
         return <div className={`${iconClass} ${rectClass}`}></div>;
     }
@@ -392,95 +383,375 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     // Check if video is loaded and has content
     if (video.videoWidth === 0 || video.videoHeight === 0) {
       console.warn('❌ Video not loaded yet (dimensions:', video.videoWidth, 'x', video.videoHeight, ')');
-      // Try to use the current poster image as fallback
-      const posterSrc = video.poster;
-      if (posterSrc && onThumbnailUpdate) {
-        console.log('🔄 Using poster image as thumbnail for scene:', selectedScene);
-        onThumbnailUpdate(selectedScene, posterSrc);
-        setCustomThumbnail(posterSrc);
-        return posterSrc;
-      }
-      // If no poster, try to use the current scene's thumbnail
-      const currentThumbnail = getCurrentThumbnail();
-      if (currentThumbnail && onThumbnailUpdate) {
-        console.log('🔄 Using current scene thumbnail as fallback for scene:', selectedScene);
-        onThumbnailUpdate(selectedScene, currentThumbnail);
-        setCustomThumbnail(currentThumbnail);
-        return currentThumbnail;
-      }
-      return currentThumbnail;
+      return getFallbackThumbnail();
     }
 
     console.log('✅ Video loaded with dimensions:', video.videoWidth, 'x', video.videoHeight);
 
+    try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return getFallbackThumbnail();
+
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      let cropWidth = videoWidth;
+      let cropHeight = videoHeight;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      // Calculate crop dimensions based on aspect ratio
+      if (aspectRatio === '9:16') {
+        const targetRatio = 9 / 16;
+        const videoRatio = videoWidth / videoHeight;
+        
+        if (videoRatio > targetRatio) {
+          cropWidth = videoHeight * targetRatio;
+          offsetX = (videoWidth - cropWidth) / 2;
+        } else {
+          cropHeight = videoWidth / targetRatio;
+          offsetY = (videoHeight - cropHeight) / 2;
+        }
+      } else if (aspectRatio === '1:1') {
+        const minDimension = Math.min(videoWidth, videoHeight);
+        cropWidth = minDimension;
+        cropHeight = minDimension;
+        offsetX = (videoWidth - minDimension) / 2;
+        offsetY = (videoHeight - minDimension) / 2;
+      } else {
+        const targetRatio = 16 / 9;
+        const videoRatio = videoWidth / videoHeight;
+        
+        if (videoRatio > targetRatio) {
+          cropWidth = videoHeight * targetRatio;
+          offsetX = (videoWidth - cropWidth) / 2;
+        } else {
+          cropHeight = videoWidth / targetRatio;
+          offsetY = (videoHeight - cropHeight) / 2;
+        }
+      }
+
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+      
+      // Set white background to prevent black frames
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cropWidth, cropHeight);
+      
+      // Draw video frame
+      ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+      const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      
+      console.log('🖼️ Captured thumbnail data URL length:', thumbnailDataUrl.length);
+      
+      // Update local state
+      setCustomThumbnail(thumbnailDataUrl);
+      
+      // Add to user's thumbnail collection
+      setUserThumbnails(prev => [...prev, thumbnailDataUrl]);
+      
+      return thumbnailDataUrl;
+    } catch (error) {
+      console.warn('❌ Canvas capture failed due to CORS or other security error:', error);
+      return getFallbackThumbnail();
+    }
+  };
+
+  const getFallbackThumbnail = () => {
+    const video = thumbnailVideoRef.current || videoRef.current;
+    
+    // Try to use the current poster image as fallback
+    const posterSrc = video?.poster;
+    if (posterSrc && onThumbnailUpdate) {
+      console.log('🔄 Using poster image as thumbnail for scene:', selectedScene);
+      onThumbnailUpdate(selectedScene, posterSrc);
+      setCustomThumbnail(posterSrc);
+      return posterSrc;
+    }
+    
+    // If no poster, try to use the current scene's thumbnail
+    const currentThumbnail = getCurrentThumbnail();
+    if (currentThumbnail && onThumbnailUpdate) {
+      console.log('🔄 Using current scene thumbnail as fallback for scene:', selectedScene);
+      onThumbnailUpdate(selectedScene, currentThumbnail);
+      setCustomThumbnail(currentThumbnail);
+      return currentThumbnail;
+    }
+    
+    // Generate a placeholder thumbnail
+    const placeholderThumbnail = generatePlaceholderThumbnail();
+    if (placeholderThumbnail && onThumbnailUpdate) {
+      console.log('🔄 Using generated placeholder thumbnail for scene:', selectedScene);
+      onThumbnailUpdate(selectedScene, placeholderThumbnail);
+      setCustomThumbnail(placeholderThumbnail);
+      return placeholderThumbnail;
+    }
+    
+    return currentThumbnail;
+  };
+
+  const generatePlaceholderThumbnail = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    const videoWidth = video.videoWidth;
-    const videoHeight = video.videoHeight;
-    let cropWidth = videoWidth;
-    let cropHeight = videoHeight;
-    let offsetX = 0;
-    let offsetY = 0;
+    canvas.width = 320;
+    canvas.height = 180;
+    
+    // Create a gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 320, 180);
+    gradient.addColorStop(0, '#4F46E5');
+    gradient.addColorStop(1, '#7C3AED');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 320, 180);
+    
+    // Add text
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Scene ' + (selectedScene + 1), 160, 100);
+    
+    ctx.font = '16px Arial';
+    ctx.fillText('Thumbnail', 160, 130);
+    
+    return canvas.toDataURL('image/jpeg', 0.8);
+  };
 
-    // Calculate crop dimensions based on aspect ratio
-    if (aspectRatio === '9:16') {
-      const targetRatio = 9 / 16;
-      const videoRatio = videoWidth / videoHeight;
-      
-      if (videoRatio > targetRatio) {
-        cropWidth = videoHeight * targetRatio;
-        offsetX = (videoWidth - cropWidth) / 2;
-      } else {
-        cropHeight = videoWidth / targetRatio;
-        offsetY = (videoHeight - cropHeight) / 2;
-      }
-    } else if (aspectRatio === '1:1') {
-      const minDimension = Math.min(videoWidth, videoHeight);
-      cropWidth = minDimension;
-      cropHeight = minDimension;
-      offsetX = (videoWidth - minDimension) / 2;
-      offsetY = (videoHeight - minDimension) / 2;
-    } else {
-      const targetRatio = 16 / 9;
-      const videoRatio = videoWidth / videoHeight;
-      
-      if (videoRatio > targetRatio) {
-        cropWidth = videoHeight * targetRatio;
-        offsetX = (videoWidth - cropWidth) / 2;
-      } else {
-        cropHeight = videoWidth / targetRatio;
-        offsetY = (videoHeight - cropHeight) / 2;
-      }
+  // Function to render video player based on selected layout
+  const renderLayoutBasedVideoPlayer = () => {
+    const videoElement = (
+      <video
+        ref={videoRef}
+        src={currentScene?.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
+        className="cursor-pointer transition-all duration-300 flex-shrink-0"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block'
+        }}
+        poster={getCurrentThumbnail()}
+        muted={isMuted}
+        preload="auto"
+        autoPlay={false}
+        playsInline
+        controls={false}
+        crossOrigin="anonymous"
+        onClick={(e) => {
+          e.stopPropagation();
+          togglePlayPause();
+        }}
+        onLoadedMetadata={() => {
+          if (videoRef.current) {
+            setDuration(videoRef.current.duration);
+            setMainVideoLoaded(true);
+            console.log('✅ Main video metadata loaded - Duration:', videoRef.current.duration);
+            console.log('📺 Main video dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
+          }
+        }}
+        onTimeUpdate={() => {
+          if (videoRef.current) {
+            setCurrentTime(videoRef.current.currentTime);
+          }
+        }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
+        onCanPlay={() => {
+          console.log('🎮 Main video can play');
+        }}
+        onLoadStart={() => {
+          console.log('🎬 Main video load started:', videoRef.current?.src);
+        }}
+      >
+        Your browser does not support the video tag.
+      </video>
+    );
+
+    // Secondary video element for different parts of the same video
+    const secondaryVideoElement = (
+      <video
+        src={currentScene?.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
+        className="cursor-pointer transition-all duration-300 flex-shrink-0"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block'
+        }}
+        poster={getCurrentThumbnail()}
+        muted={isMuted}
+        preload="auto"
+        autoPlay={false}
+        playsInline
+        controls={false}
+        crossOrigin="anonymous"
+        onClick={(e) => {
+          e.stopPropagation();
+          togglePlayPause();
+        }}
+      >
+        Your browser does not support the video tag.
+      </video>
+    );
+
+    const layout = layoutOptions.find(l => l.id === selectedLayout);
+    if (!layout) return videoElement;
+
+    switch (layout.icon) {
+      case 'single-full':
+        return (
+          <div className="w-full h-full relative">
+            {videoElement}
+          </div>
+        );
+
+      case 'split-vertical':
+        return (
+          <div className="w-full h-full flex gap-2">
+            <div className="w-1/2 h-full relative">
+              {videoElement}
+            </div>
+            <div className="w-1/2 h-full relative rounded overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+          </div>
+        );
+
+      case 'split-horizontal':
+        return (
+          <div className="w-full h-full flex flex-col gap-2">
+            <div className="w-full h-1/2 relative">
+              {videoElement}
+            </div>
+            <div className="w-full h-1/2 relative rounded overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+          </div>
+        );
+
+      case 'pip-top-right':
+        return (
+          <div className="w-full h-full relative">
+            <div className="w-full h-full">
+              {videoElement}
+            </div>
+            <div className="absolute top-4 right-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+          </div>
+        );
+
+      case 'pip-bottom-right':
+        return (
+          <div className="w-full h-full relative">
+            <div className="w-full h-full">
+              {videoElement}
+            </div>
+            <div className="absolute bottom-4 right-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+          </div>
+        );
+
+      case 'pip-bottom-left':
+        return (
+          <div className="w-full h-full relative">
+            <div className="w-full h-full">
+              {videoElement}
+            </div>
+            <div className="absolute bottom-4 left-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+          </div>
+        );
+
+      case 'pip-top-left':
+        return (
+          <div className="w-full h-full relative">
+            <div className="w-full h-full">
+              {videoElement}
+            </div>
+            <div className="absolute top-4 left-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+          </div>
+        );
+
+      case 'sidebar-right':
+        return (
+          <div className="w-full h-full flex gap-2">
+            <div className="w-2/3 h-full relative">
+              {videoElement}
+            </div>
+            <div className="w-1/3 h-full rounded flex flex-col gap-2">
+              <div className="h-1/3 relative rounded overflow-hidden">
+                {secondaryVideoElement}
+              </div>
+              <div className="h-1/3 relative rounded overflow-hidden">
+                {secondaryVideoElement}
+              </div>
+              <div className="h-1/3 relative rounded overflow-hidden">
+                {secondaryVideoElement}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'sidebar-left':
+        return (
+          <div className="w-full h-full flex gap-2">
+            <div className="w-1/3 h-full rounded flex flex-col gap-2">
+              <div className="h-1/3 relative rounded overflow-hidden">
+                {secondaryVideoElement}
+              </div>
+              <div className="h-1/3 relative rounded overflow-hidden">
+                {secondaryVideoElement}
+              </div>
+              <div className="h-1/3 relative rounded overflow-hidden">
+                {secondaryVideoElement}
+              </div>
+            </div>
+            <div className="w-2/3 h-full relative">
+              {videoElement}
+            </div>
+          </div>
+        );
+
+      case 'header-layout':
+        return (
+          <div className="w-full h-full flex flex-col gap-2">
+            <div className="w-full h-1/4 relative rounded overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+            <div className="w-full h-3/4 relative">
+              {videoElement}
+            </div>
+          </div>
+        );
+
+      case 'footer-layout':
+        return (
+          <div className="w-full h-full flex flex-col gap-2">
+            <div className="w-full h-3/4 relative">
+              {videoElement}
+            </div>
+            <div className="w-full h-1/4 relative rounded overflow-hidden">
+              {secondaryVideoElement}
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="w-full h-full relative">
+            {videoElement}
+          </div>
+        );
     }
-
-    canvas.width = cropWidth;
-    canvas.height = cropHeight;
-    
-    // Set white background to prevent black frames
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, cropWidth, cropHeight);
-    
-    // Draw video frame
-    ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
-    const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    
-    // Notify parent component about thumbnail update
-    if (onThumbnailUpdate) {
-      console.log('🖼️ Updating thumbnail for scene:', selectedScene, 'with data URL length:', thumbnailDataUrl.length);
-      onThumbnailUpdate(selectedScene, thumbnailDataUrl);
-    } else {
-      console.warn('⚠️ onThumbnailUpdate callback not provided');
-    }
-    
-    // Also update local state
-    setCustomThumbnail(thumbnailDataUrl);
-    
-    // Add to user's thumbnail collection
-    setUserThumbnails(prev => [...prev, thumbnailDataUrl]);
-    
-    return thumbnailDataUrl;
   };
 
   const captureVerticalFrameFromVideo = () => {
@@ -676,64 +947,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               </div>
             </div>
           )}
-          <video
-            ref={videoRef}
-            src={currentScene?.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
-            className={`cursor-pointer transition-all duration-300 flex-shrink-0 ${
-              videoViewMode === 'portrait' ? 'aspect-[9/16]' : 'aspect-video'
-            }`}
-            style={{
-              width: videoViewMode === 'portrait' ? '320px' : '100%',
-              height: 'auto',
-              minWidth: videoViewMode === 'portrait' ? '320px' : '500px',
-              maxWidth: videoViewMode === 'portrait' ? '320px' : '100%',
-              objectFit: 'cover',
-              display: 'block'
-            }}
-            poster={getCurrentThumbnail()}
-            muted={isMuted}
-            preload="auto"
-            autoPlay={false}
-            playsInline
-            controls={false}
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePlayPause();
-            }}
-            onLoadedMetadata={() => {
-              if (videoRef.current) {
-                setDuration(videoRef.current.duration);
-                setMainVideoLoaded(true);
-                console.log('✅ Main video metadata loaded - Duration:', videoRef.current.duration);
-                console.log('📺 Main video dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
-              }
-            }}
-            onTimeUpdate={() => {
-              if (videoRef.current) {
-                setCurrentTime(videoRef.current.currentTime);
-              }
-            }}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
-            onError={(e) => {
-              console.error('❌ Main video error:', e);
-              console.error('❌ Main video src:', currentScene?.videoUrl);
-              console.error('❌ Video error details:', {
-                error: e.currentTarget.error,
-                networkState: e.currentTarget.networkState,
-                readyState: e.currentTarget.readyState
-              });
-            }}
-            onLoadStart={() => {
-              console.log('🎬 Main video load started:', currentScene?.videoUrl);
-            }}
-            onCanPlay={() => {
-              console.log('🎮 Main video can play');
-            }}
-          >
-            Your browser does not support the video tag.
-          </video>
+          {/* Layout-based Video Player */}
+          {renderLayoutBasedVideoPlayer()}
           
           {/* Hover Overlay with Video Controls and Thumbnail Button */}
           {isVideoHovered && (
@@ -744,9 +959,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent video click
                     console.log('🎬 Capture thumbnail clicked for scene:', selectedScene);
+                    console.log('🎬 Video ref:', videoRef.current);
+                    console.log('🎬 Video loaded:', videoRef.current?.readyState);
+                    console.log('🎬 Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+                    console.log('🎬 onThumbnailUpdate callback:', !!onThumbnailUpdate);
                     
                     // Force update thumbnail even if video isn't loaded
                     let frameData = captureFrameFromVideo();
+                    console.log('🎬 Capture result:', frameData ? 'Success' : 'Failed');
                     
                     // If capture failed, use a test image or current thumbnail
                     if (!frameData) {

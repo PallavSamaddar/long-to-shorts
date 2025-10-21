@@ -20,6 +20,7 @@ const ProjectDetail = () => {
     position: 'top-right',
     opacity: 50
   });
+  const [projectStatus, setProjectStatus] = useState<'In queue' | 'Published'>('In queue');
 
   const handleSceneSelect = (index: number) => {
     setSelectedScene(index);
@@ -68,6 +69,7 @@ const ProjectDetail = () => {
   };
 
   const handlePublishComplete = () => {
+    setProjectStatus('Published');
     setIsPublishDialogOpen(false);
     // Navigate to home page
     navigate('/');
@@ -86,6 +88,7 @@ const ProjectDetail = () => {
             onPreviousScene={handlePreviousScene}
             onNextScene={handleNextScene}
             updatedThumbnails={updatedThumbnails}
+            projectStatus={projectStatus}
           />
           
           <TranscriptsList
@@ -108,6 +111,7 @@ const ProjectDetail = () => {
       <PublishSettingsDialog
         isOpen={isPublishDialogOpen}
         onClose={() => setIsPublishDialogOpen(false)}
+        onPublishComplete={handlePublishComplete}
         currentSceneIndex={selectedScene}
         totalScenes={scenes.length}
         availableThumbnails={updatedThumbnails}

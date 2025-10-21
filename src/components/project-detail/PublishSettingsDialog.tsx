@@ -11,6 +11,7 @@ import { Upload, Video, PlayCircle, FolderOpen, Smartphone, Monitor, RotateCcw }
 interface PublishSettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onPublishComplete?: () => void;
   currentSceneIndex?: number;
   totalScenes?: number;
   availableThumbnails?: { [key: number]: string };
@@ -19,6 +20,7 @@ interface PublishSettingsDialogProps {
 const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({ 
   isOpen, 
   onClose, 
+  onPublishComplete,
   currentSceneIndex = 0, 
   totalScenes = 7,
   availableThumbnails = {}
@@ -70,7 +72,14 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
 
     setIsProcessing(false);
     onClose();
-    navigate('/projects');
+    
+    // Call the publish complete handler if provided
+    if (onPublishComplete) {
+      onPublishComplete();
+    } else {
+      // Fallback to navigation
+      navigate('/projects');
+    }
   };
 
 
