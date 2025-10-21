@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, Info, Upload, Eye, X, Maximize2, Minimize2 } from 'lucide-react';
 import { scenes } from '@/data/projectDetailData';
 import LogoWatermark from './LogoWatermark';
@@ -956,71 +957,74 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
             <div className="absolute inset-0 bg-black bg-opacity-10 z-20 transition-opacity duration-200 pointer-events-none">
               {/* Thumbnail Capture Button - Top Right */}
               <div className="absolute top-4 right-4 z-30 pointer-events-auto">
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent video click
-                    console.log('🎬 Capture thumbnail clicked for scene:', selectedScene);
-                    console.log('🎬 Video ref:', videoRef.current);
-                    console.log('🎬 Video loaded:', videoRef.current?.readyState);
-                    console.log('🎬 Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
-                    console.log('🎬 onThumbnailUpdate callback:', !!onThumbnailUpdate);
-                    
-                    // Force update thumbnail even if video isn't loaded
-                    let frameData = captureFrameFromVideo();
-                    console.log('🎬 Capture result:', frameData ? 'Success' : 'Failed');
-                    
-                    // If capture failed, use a test image or current thumbnail
-                    if (!frameData) {
-                      console.log('🔄 Capture failed, using current scene thumbnail as test');
-                      frameData = currentScene.thumbnail;
-                    }
-                    
-                    if (frameData) {
-                      console.log('✅ Thumbnail ready, updating local and parent state');
-                      setCustomThumbnail(frameData);
-                      setShowThumbnails(false);
-                      
-                      // Show success tick for 2 seconds
-                      setShowCaptureSuccess(true);
-                      setTimeout(() => {
-                        setShowCaptureSuccess(false);
-                      }, 2000);
-                      
-                      // Force notify parent component
-                      if (onThumbnailUpdate) {
-                        console.log('📤 Notifying parent of thumbnail update for scene:', selectedScene);
-                        onThumbnailUpdate(selectedScene, frameData);
-                        
-                        // Show success feedback
-                        console.log('🎉 Thumbnail captured and updated successfully!');
-                        console.log('📱 This should update the LHS scene list');
-                        console.log('📋 This should update the publish popup thumbnails');
-                      } else {
-                        console.error('❌ onThumbnailUpdate callback is missing!');
-                      }
-                    } else {
-                      console.error('❌ No thumbnail data available');
-                    }
-                  }}
-                  size="sm"
-                  className={`font-semibold flex items-center gap-2 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 ${
-                    showCaptureSuccess 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
-                  }`}
-                >
-                  {showCaptureSuccess ? (
-                    <>
-                      <span className="text-sm">✅</span>
-                      <span className="text-xs">Captured!</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-sm">📸</span>
-                      <span className="text-xs">Capture</span>
-                    </>
-                  )}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent video click
+                          console.log('🎬 Capture thumbnail clicked for scene:', selectedScene);
+                          console.log('🎬 Video ref:', videoRef.current);
+                          console.log('🎬 Video loaded:', videoRef.current?.readyState);
+                          console.log('🎬 Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+                          console.log('🎬 onThumbnailUpdate callback:', !!onThumbnailUpdate);
+                          
+                          // Force update thumbnail even if video isn't loaded
+                          let frameData = captureFrameFromVideo();
+                          console.log('🎬 Capture result:', frameData ? 'Success' : 'Failed');
+                          
+                          // If capture failed, use a test image or current thumbnail
+                          if (!frameData) {
+                            console.log('🔄 Capture failed, using current scene thumbnail as test');
+                            frameData = currentScene.thumbnail;
+                          }
+                          
+                          if (frameData) {
+                            console.log('✅ Thumbnail ready, updating local and parent state');
+                            setCustomThumbnail(frameData);
+                            setShowThumbnails(false);
+                            
+                            // Show success tick for 2 seconds
+                            setShowCaptureSuccess(true);
+                            setTimeout(() => {
+                              setShowCaptureSuccess(false);
+                            }, 2000);
+                            
+                            // Force notify parent component
+                            if (onThumbnailUpdate) {
+                              console.log('📤 Notifying parent of thumbnail update for scene:', selectedScene);
+                              onThumbnailUpdate(selectedScene, frameData);
+                              
+                              // Show success feedback
+                              console.log('🎉 Thumbnail captured and updated successfully!');
+                              console.log('📱 This should update the LHS scene list');
+                              console.log('📋 This should update the publish popup thumbnails');
+                            } else {
+                              console.error('❌ onThumbnailUpdate callback is missing!');
+                            }
+                          } else {
+                            console.error('❌ No thumbnail data available');
+                          }
+                        }}
+                        size="sm"
+                        className={`font-semibold flex items-center justify-center w-10 h-10 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 ${
+                          showCaptureSuccess 
+                            ? 'bg-green-600 text-white' 
+                            : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
+                        }`}
+                      >
+                        {showCaptureSuccess ? (
+                          <span className="text-lg">✅</span>
+                        ) : (
+                          <span className="text-lg">📸</span>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{showCaptureSuccess ? 'Captured!' : 'Capture'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               {/* Video Controls - Bottom Center */}
@@ -1054,7 +1058,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                     {/* Progress Bar */}
                     <div className="flex-1 relative min-w-0">
                       <div 
-                        className="h-2 w-full bg-white/30 rounded-full cursor-pointer overflow-hidden touch-none"
+                        className="h-2 w-full bg-white/30 rounded-full cursor-pointer overflow-hidden touch-none relative"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent video click
                           const rect = e.currentTarget.getBoundingClientRect();
@@ -1067,9 +1071,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                           }
                         }}
                       >
+                        {/* Progress Fill */}
                         <div 
                           className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400 rounded-full transition-all duration-300 ease-out"
                           style={{ width: `${progress}%` }}
+                        />
+                        
+                        {/* Red Line Indicator */}
+                        <div 
+                          className="absolute top-0 h-full w-0.5 bg-red-500 rounded-full transition-all duration-300 ease-out"
+                          style={{ left: `${progress}%` }}
                         />
                       </div>
                     </div>
@@ -1168,6 +1179,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           {/* Hidden canvas for frame capture */}
           <canvas ref={canvasRef} style={{ display: 'none' }} />
         </div>
+
+        {/* Vertical Video Progress Line - Only show in portrait mode */}
+        {videoViewMode === 'portrait' && (
+          <div className="mt-2 mb-1 w-full h-1 bg-slate-300 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-red-500 transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+
+        {/* Horizontal Video Progress Line - Only show in landscape mode */}
+        {videoViewMode === 'landscape' && (
+          <div className="mt-2 mb-1 w-full h-1 bg-slate-300 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-red-500 transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
 
         {/* Unified Layout and Video Controls Bar */}
         <div className="mt-2 flex-shrink-0 min-h-0">

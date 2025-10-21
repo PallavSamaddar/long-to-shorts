@@ -28,7 +28,6 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
   const [publishScope, setPublishScope] = useState<'current' | 'all'>('current');
   const [videoOrientation, setVideoOrientation] = useState<'vertical' | 'horizontal' | 'both'>('both');
   const [selectedThumbnails, setSelectedThumbnails] = useState<{ [key: number]: string }>({});
-  const [bothOrientationTab, setBothOrientationTab] = useState<'vertical' | 'horizontal'>('vertical');
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
@@ -351,160 +350,128 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
             </div>
           )}
 
-          {/* Both Orientations Thumbnail Selection with Tabs */}
+          {/* Both Orientations Thumbnail Selection - Stacked Layout */}
           {videoOrientation === 'both' && (
-            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-              <h3 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
-                <RotateCcw className="w-4 h-4" />
-                Choose Thumbnails for Both Orientations
-              </h3>
-              <p className="text-sm text-purple-700 mb-4">
-                Select thumbnails for each orientation separately
-              </p>
-              
-              {/* Tabs */}
-              <div className="flex space-x-1 mb-4 bg-gray-200 rounded-lg p-1">
-                <button
-                  onClick={() => setBothOrientationTab('vertical')}
-                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
-                    bothOrientationTab === 'vertical'
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Smartphone className="w-4 h-4" />
-                    Vertical (9:16)
-                  </div>
-                </button>
-                <button
-                  onClick={() => setBothOrientationTab('horizontal')}
-                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
-                    bothOrientationTab === 'horizontal'
-                      ? 'bg-green-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Monitor className="w-4 h-4" />
-                    Horizontal (16:9)
-                  </div>
-                </button>
+            <div className="space-y-6">
+              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Choose Thumbnails for Both Orientations
+                </h3>
+                <p className="text-sm text-purple-700">
+                  Select thumbnails for each orientation separately
+                </p>
               </div>
               
-              {/* Vertical Tab Content */}
-              {bothOrientationTab === 'vertical' && (
-                <div>
-                  <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
-                    <Smartphone className="w-4 h-4" />
-                    Vertical Thumbnails (9:16)
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {getAvailableThumbnails().map(({ sceneIndex, thumbnailUrl }) => (
-                      <div
-                        key={`both-vertical-${sceneIndex}-${thumbnailUrl}`}
-                        className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                          selectedThumbnails[sceneIndex] === thumbnailUrl
-                            ? 'border-blue-500 ring-2 ring-blue-200'
-                            : 'border-gray-200 hover:border-blue-300'
-                        }`}
-                        onClick={() => handleThumbnailToggle(sceneIndex, thumbnailUrl)}
-                        style={{ aspectRatio: '9/16' }}
-                      >
-                        <img
-                          src={thumbnailUrl}
-                          alt={`Scene ${sceneIndex + 1} vertical thumbnail`}
-                          className="w-full h-full object-cover"
-                        />
-                        
-                        {/* Selection indicator */}
-                        {selectedThumbnails[sceneIndex] === thumbnailUrl && (
-                          <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                        
-                        {/* Scene number overlay */}
-                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                          Scene {sceneIndex + 1}
+              {/* Vertical Thumbnails Section */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4" />
+                  Vertical Thumbnails (9:16)
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {getAvailableThumbnails().map(({ sceneIndex, thumbnailUrl }) => (
+                    <div
+                      key={`both-vertical-${sceneIndex}-${thumbnailUrl}`}
+                      className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                        selectedThumbnails[sceneIndex] === thumbnailUrl
+                          ? 'border-blue-500 ring-2 ring-blue-200'
+                          : 'border-gray-200 hover:border-blue-300'
+                      }`}
+                      onClick={() => handleThumbnailToggle(sceneIndex, thumbnailUrl)}
+                      style={{ aspectRatio: '9/16' }}
+                    >
+                      <img
+                        src={thumbnailUrl}
+                        alt={`Scene ${sceneIndex + 1} vertical thumbnail`}
+                        className="w-full h-full object-cover"
+                      />
+                      
+                      {/* Selection indicator */}
+                      {selectedThumbnails[sceneIndex] === thumbnailUrl && (
+                        <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
                         </div>
-                        
-                        {/* Vertical indicator */}
-                        <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                          📱 9:16
-                        </div>
+                      )}
+                      
+                      {/* Scene number overlay */}
+                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        Scene {sceneIndex + 1}
                       </div>
-                    ))}
-                  </div>
-                  
-                  {getAvailableThumbnails().length === 0 && (
-                    <div className="text-center py-8 text-blue-600">
-                      <Smartphone className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>No vertical thumbnails available</p>
-                      <p className="text-sm">Create some thumbnails first to see them here</p>
+                      
+                      {/* Vertical indicator */}
+                      <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        📱 9:16
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              )}
+                
+                {getAvailableThumbnails().length === 0 && (
+                  <div className="text-center py-8 text-blue-600">
+                    <Smartphone className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No vertical thumbnails available</p>
+                    <p className="text-sm">Create some thumbnails first to see them here</p>
+                  </div>
+                )}
+              </div>
               
-              {/* Horizontal Tab Content */}
-              {bothOrientationTab === 'horizontal' && (
-                <div>
-                  <h4 className="font-medium text-green-900 mb-3 flex items-center gap-2">
-                    <Monitor className="w-4 h-4" />
-                    Horizontal Thumbnails (16:9)
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {getAvailableThumbnails().map(({ sceneIndex, thumbnailUrl }) => (
-                      <div
-                        key={`both-horizontal-${sceneIndex}-${thumbnailUrl}`}
-                        className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                          selectedThumbnails[sceneIndex] === thumbnailUrl
-                            ? 'border-green-500 ring-2 ring-green-200'
-                            : 'border-gray-200 hover:border-green-300'
-                        }`}
-                        onClick={() => handleThumbnailToggle(sceneIndex, thumbnailUrl)}
-                        style={{ aspectRatio: '16/9' }}
-                      >
-                        <img
-                          src={thumbnailUrl}
-                          alt={`Scene ${sceneIndex + 1} horizontal thumbnail`}
-                          className="w-full h-full object-cover"
-                        />
-                        
-                        {/* Selection indicator */}
-                        {selectedThumbnails[sceneIndex] === thumbnailUrl && (
-                          <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                        
-                        {/* Scene number overlay */}
-                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                          Scene {sceneIndex + 1}
+              {/* Horizontal Thumbnails Section */}
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <h4 className="font-medium text-green-900 mb-3 flex items-center gap-2">
+                  <Monitor className="w-4 h-4" />
+                  Horizontal Thumbnails (16:9)
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {getAvailableThumbnails().map(({ sceneIndex, thumbnailUrl }) => (
+                    <div
+                      key={`both-horizontal-${sceneIndex}-${thumbnailUrl}`}
+                      className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                        selectedThumbnails[sceneIndex] === thumbnailUrl
+                          ? 'border-green-500 ring-2 ring-green-200'
+                          : 'border-gray-200 hover:border-green-300'
+                      }`}
+                      onClick={() => handleThumbnailToggle(sceneIndex, thumbnailUrl)}
+                      style={{ aspectRatio: '16/9' }}
+                    >
+                      <img
+                        src={thumbnailUrl}
+                        alt={`Scene ${sceneIndex + 1} horizontal thumbnail`}
+                        className="w-full h-full object-cover"
+                      />
+                      
+                      {/* Selection indicator */}
+                      {selectedThumbnails[sceneIndex] === thumbnailUrl && (
+                        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
                         </div>
-                        
-                        {/* Horizontal indicator */}
-                        <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                          🖥️ 16:9
-                        </div>
+                      )}
+                      
+                      {/* Scene number overlay */}
+                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        Scene {sceneIndex + 1}
                       </div>
-                    ))}
-                  </div>
-                  
-                  {getAvailableThumbnails().length === 0 && (
-                    <div className="text-center py-8 text-green-600">
-                      <Monitor className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>No horizontal thumbnails available</p>
-                      <p className="text-sm">Create some thumbnails first to see them here</p>
+                      
+                      {/* Horizontal indicator */}
+                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                        🖥️ 16:9
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              )}
+                
+                {getAvailableThumbnails().length === 0 && (
+                  <div className="text-center py-8 text-green-600">
+                    <Monitor className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No horizontal thumbnails available</p>
+                    <p className="text-sm">Create some thumbnails first to see them here</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -519,7 +486,7 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
             onClick={handlePublish}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            Publish to Slike
+            Process to Slike
           </Button>
         </div>
       </DialogContent>
