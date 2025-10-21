@@ -30,6 +30,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const [playbackRate, setPlaybackRate] = useState(1);
       const [thumbnailMode, setThumbnailMode] = useState<'timeline' | 'gallery' | 'preset' | 'logo'>('timeline');
   const [customThumbnail, setCustomThumbnail] = useState<string | null>(null);
+  const [showCaptureSuccess, setShowCaptureSuccess] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('16:9');
   const [logoWatermark, setLogoWatermark] = useState<{
     image: string | null;
@@ -952,7 +953,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           
           {/* Hover Overlay with Video Controls and Thumbnail Button */}
           {isVideoHovered && (
-            <div className="absolute inset-0 bg-black bg-opacity-30 z-20 transition-opacity duration-200 pointer-events-none">
+            <div className="absolute inset-0 bg-black bg-opacity-10 z-20 transition-opacity duration-200 pointer-events-none">
               {/* Thumbnail Capture Button - Top Right */}
               <div className="absolute top-4 right-4 z-30 pointer-events-auto">
                 <Button
@@ -979,6 +980,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                       setCustomThumbnail(frameData);
                       setShowThumbnails(false);
                       
+                      // Show success tick for 2 seconds
+                      setShowCaptureSuccess(true);
+                      setTimeout(() => {
+                        setShowCaptureSuccess(false);
+                      }, 2000);
+                      
                       // Force notify parent component
                       if (onThumbnailUpdate) {
                         console.log('📤 Notifying parent of thumbnail update for scene:', selectedScene);
@@ -996,19 +1003,32 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                     }
                   }}
                   size="sm"
-                  className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold flex items-center gap-2 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  className={`font-semibold flex items-center gap-2 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 ${
+                    showCaptureSuccess 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
+                  }`}
                 >
-                  <span className="text-sm">📸</span>
-                  <span className="text-xs">Capture</span>
+                  {showCaptureSuccess ? (
+                    <>
+                      <span className="text-sm">✅</span>
+                      <span className="text-xs">Captured!</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-sm">📸</span>
+                      <span className="text-xs">Capture</span>
+                    </>
+                  )}
                 </Button>
               </div>
 
               {/* Video Controls - Bottom Center */}
-              <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full px-4 z-30 pointer-events-auto ${
+              <div className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 w-full px-4 z-30 pointer-events-auto ${
                 videoViewMode === 'portrait' ? 'max-w-sm' : 'max-w-2xl'
               }`}>
                 <div 
-                  className="bg-black bg-opacity-80 rounded-lg p-3 backdrop-blur-sm"
+                  className="bg-black bg-opacity-60 rounded-lg p-2 backdrop-blur-sm"
                   onClick={(e) => e.stopPropagation()} // Prevent video click
                 >
                   {/* All Controls in One Line */}
@@ -1150,11 +1170,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </div>
 
         {/* Unified Layout and Video Controls Bar */}
-        <div className="mt-0 flex-shrink-0 min-h-0">
+        <div className="mt-2 flex-shrink-0 min-h-0">
           {/* Layout Selection Section */}
-          <div className="bg-slate-600 rounded-lg p-2 flex items-center justify-between gap-1 w-full">
+          <div className="bg-slate-600 rounded-lg p-3 flex items-center justify-between gap-3 w-full min-w-0">
             {/* Layout Options */}
-            <div className="flex items-center justify-center gap-1 flex-1">
+            <div className="flex items-center justify-center gap-2 flex-1 min-w-0 overflow-x-auto">
               {layoutOptions.map((layout) => (
                 <button
                   key={layout.id}
@@ -1176,7 +1196,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               <Button
                 onClick={() => onPublishAllScenes()}
                 size="sm"
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold flex items-center gap-2 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex-shrink-0"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold flex items-center gap-2 px-3 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex-shrink-0 whitespace-nowrap"
                 title="Publish Video"
               >
                 <Upload className="w-4 h-4" />
@@ -1219,22 +1239,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </DialogContent>
       </Dialog>
 
-      {/* Custom Thumbnail Status */}
-      {customThumbnail && (
-        <div className="mt-6 px-4 w-full">
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xs text-green-400">✅ Custom thumbnail set</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCustomThumbnail(null)}
-              className="text-xs h-6 px-2 text-slate-300 border-slate-600 hover:bg-slate-700"
-            >
-              Reset
-            </Button>
-          </div>
-        </div>
-      )}
 
 
       {/* Enhanced Thumbnail Selection Modal */}
