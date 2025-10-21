@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Upload, Youtube, Globe, Instagram, Twitter, Facebook, Linkedin, Twitch,  Twitter as X, Video, PlayCircle, FolderOpen, Smartphone, Monitor, RotateCcw } from 'lucide-react';
+import { Upload, Video, PlayCircle, FolderOpen, Smartphone, Monitor, RotateCcw } from 'lucide-react';
 
 interface PublishSettingsDialogProps {
   isOpen: boolean;
@@ -23,7 +23,6 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
   totalScenes = 7,
   availableThumbnails = {}
 }) => {
-  const [selectedDestinations, setSelectedDestinations] = useState<string[]>(['slike']);
   const [publishScope, setPublishScope] = useState<'current' | 'all'>('current');
   const [videoOrientation, setVideoOrientation] = useState<'vertical' | 'horizontal' | 'both'>('both');
   const [selectedThumbnails, setSelectedThumbnails] = useState<{ [key: number]: string }>({});
@@ -32,38 +31,8 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
   const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
-  // All publishing destinations organized by category
-  const publishDestinations = {
-    socialMedia: [
-      { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'text-pink-600', description: 'Instagram Feed & Stories' },
-      { id: 'twitter', name: 'Twitter/X', icon: X, color: 'text-gray-900', description: 'Social media posts' },
-      { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'text-blue-600', description: 'Facebook videos & posts' },
-      { id: 'meta', name: 'Meta', icon: Facebook, color: 'text-blue-700', description: 'Meta platforms integration' },
-      { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'text-blue-700', description: 'Professional content' },
-      { id: 'snapchat', name: 'Snapchat', icon: Globe, color: 'text-yellow-500', description: 'Snapchat Stories & Spotlight' },
-      { id: 'pinterest', name: 'Pinterest', icon: Globe, color: 'text-red-600', description: 'Visual discovery platform' }
-    ],
-    videoPlatforms: [
-      { id: 'youtube1', name: 'Tech Reviews Channel', icon: Youtube, color: 'text-red-600', description: '15.2K subscribers' },
-      { id: 'youtube2', name: 'Educational Content', icon: Youtube, color: 'text-red-600', description: '8.7K subscribers' },
-      { id: 'youtube3', name: 'Personal Vlogs', icon: Youtube, color: 'text-red-600', description: '3.1K subscribers' },
-      { id: 'twitch', name: 'Twitch', icon: Twitch, color: 'text-purple-600', description: 'Live streaming platform' }
-    ],
-    generalPlatforms: [
-      { id: 'slike', name: 'Slike', icon: Globe, color: 'text-gray-700', description: 'General publishing platform' },
-      { id: 'dailymotion', name: 'Dailymotion', icon: Globe, color: 'text-blue-600', description: 'Video sharing platform' },
-      { id: 'rumble', name: 'Rumble', icon: Globe, color: 'text-green-600', description: 'Independent video platform' },
-      { id: 'odysee', name: 'Odysee', icon: Globe, color: 'text-orange-600', description: 'Decentralized video platform' }
-    ]
-  };
+  // Only Slike platform is available for publishing
 
-  const handleDestinationToggle = (destinationId: string) => {
-    setSelectedDestinations(prev => 
-      prev.includes(destinationId) 
-        ? prev.filter(id => id !== destinationId)
-        : [...prev, destinationId]
-    );
-  };
 
   const handleThumbnailToggle = (sceneIndex: number, thumbnailUrl: string) => {
     setSelectedThumbnails(prev => {
@@ -104,18 +73,6 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
     navigate('/projects');
   };
 
-  const getCategoryTitle = (category: keyof typeof publishDestinations) => {
-    switch (category) {
-      case 'socialMedia':
-        return 'Social Media Platforms';
-      case 'videoPlatforms':
-        return 'Video Platforms';
-      case 'generalPlatforms':
-        return 'General Platforms';
-      default:
-        return 'Platforms';
-    }
-  };
 
   if (isProcessing) {
     return (
@@ -130,10 +87,7 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
           <div className="space-y-4">
             <Progress value={progress} className="w-full" />
             <p className="text-sm text-gray-600 text-center">
-              {publishScope === 'current' 
-                ? `Uploading Scene ${currentSceneIndex + 1} (${videoOrientation}) to ${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''}... ${progress}%`
-                : `Uploading all scenes (${videoOrientation}) to ${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''}... ${progress}%`
-              }
+              Publishing to Slike... {progress}%
             </p>
           </div>
         </DialogContent>
@@ -545,100 +499,6 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
             </div>
           )}
 
-          <div className="space-y-6">
-          {/* Social Media Platforms */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('socialMedia')}</h3>
-            <div className="grid grid-cols-1 gap-3">
-              {publishDestinations.socialMedia.map((destination) => {
-                const IconComponent = destination.icon;
-                return (
-                  <div
-                    key={destination.id}
-                    className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <Checkbox
-                      id={destination.id}
-                      checked={selectedDestinations.includes(destination.id)}
-                      onCheckedChange={() => handleDestinationToggle(destination.id)}
-                    />
-                    <div className="flex items-center space-x-3 flex-1">
-                      <IconComponent className={`w-5 h-5 ${destination.color}`} />
-                      <div className="flex-1">
-                        <label htmlFor={destination.id} className="text-sm font-medium text-gray-900 cursor-pointer">
-                          {destination.name}
-                        </label>
-                        <p className="text-xs text-gray-500">{destination.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Video Platforms */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('videoPlatforms')}</h3>
-            <div className="grid grid-cols-1 gap-3">
-              {publishDestinations.videoPlatforms.map((destination) => {
-                const IconComponent = destination.icon;
-                return (
-                  <div
-                    key={destination.id}
-                    className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <Checkbox
-                      id={destination.id}
-                      checked={selectedDestinations.includes(destination.id)}
-                      onCheckedChange={() => handleDestinationToggle(destination.id)}
-                    />
-                    <div className="flex items-center space-x-3 flex-1">
-                      <IconComponent className={`w-5 h-5 ${destination.color}`} />
-                      <div className="flex-1">
-                        <label htmlFor={destination.id} className="text-sm font-medium text-gray-900 cursor-pointer">
-                          {destination.name}
-                        </label>
-                        <p className="text-xs text-gray-500">{destination.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* General Platforms */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-3">{getCategoryTitle('generalPlatforms')}</h3>
-            <div className="grid grid-cols-1 gap-3">
-              {publishDestinations.generalPlatforms.map((destination) => {
-                const IconComponent = destination.icon;
-                return (
-                  <div
-                    key={destination.id}
-                    className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <Checkbox
-                      id={destination.id}
-                      checked={selectedDestinations.includes(destination.id)}
-                      onCheckedChange={() => handleDestinationToggle(destination.id)}
-                    />
-                    <div className="flex items-center space-x-3 flex-1">
-                      <IconComponent className={`w-5 h-5 ${destination.color}`} />
-                      <div className="flex-1">
-                        <label htmlFor={destination.id} className="text-sm font-medium text-gray-900 cursor-pointer">
-                          {destination.name}
-                        </label>
-                        <p className="text-xs text-gray-500">{destination.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          </div>
         </div>
 
         {/* Fixed Footer */}
@@ -648,13 +508,9 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
           </Button>
           <Button
             onClick={handlePublish}
-            disabled={selectedDestinations.length === 0}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {publishScope === 'current' 
-              ? `Publish Scene ${currentSceneIndex + 1} (${videoOrientation}) - ${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''}`
-              : `Publish All (${videoOrientation}) - ${selectedDestinations.length} destination${selectedDestinations.length !== 1 ? 's' : ''}`
-            }
+            Publish to Slike
           </Button>
         </div>
       </DialogContent>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Info, Upload, Eye, X } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, Info, Upload, Eye, X, Maximize2, Minimize2 } from 'lucide-react';
 import { scenes } from '@/data/projectDetailData';
 import LogoWatermark from './LogoWatermark';
 
@@ -44,11 +44,130 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const [showVerticalPreview, setShowVerticalPreview] = useState(false);
   const [verticalThumbnail, setVerticalThumbnail] = useState<string | null>(null);
   const [userThumbnails, setUserThumbnails] = useState<string[]>([]);
+  const [isVideoHovered, setIsVideoHovered] = useState(false);
+  const [videoViewMode, setVideoViewMode] = useState<'landscape' | 'portrait'>('landscape');
+  const [selectedLayout, setSelectedLayout] = useState<number>(2); // Default to layout 2 (two horizontal rectangles)
+  const [showLayoutSelection, setShowLayoutSelection] = useState(false);
   const [selectedVerticalLayout, setSelectedVerticalLayout] = useState<string>('focused-on-one');
   const [selectedCaptionStyle, setSelectedCaptionStyle] = useState<string>('none');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const verticalUploadRef = useRef<HTMLInputElement>(null);
   const thumbnailVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Layout options data
+  const layoutOptions = [
+    { id: 0, name: 'Single', icon: 'single' },
+    { id: 1, name: 'Two Columns', icon: 'two-columns' },
+    { id: 2, name: 'Two Rows', icon: 'two-rows' },
+    { id: 3, name: 'Main + 3 Side', icon: 'main-3side' },
+    { id: 4, name: 'Main + 4 Side', icon: 'main-4side' },
+    { id: 5, name: 'Main + Expand', icon: 'main-expand' },
+    { id: 6, name: 'Side + Main', icon: 'side-main' },
+    { id: 7, name: 'Side + Main + 2', icon: 'side-main-2' },
+    { id: 8, name: 'Three Columns', icon: 'three-columns' },
+    { id: 9, name: 'Two Columns Alt', icon: 'two-columns-alt' },
+    { id: 10, name: 'Single Alt', icon: 'single-alt' }
+  ];
+
+  // Function to render layout icon - Enhanced to match image layouts
+  const renderLayoutIcon = (iconType: string) => {
+    const iconClass = "w-3 h-2";
+    const rectClass = "bg-white rounded-sm";
+    
+    switch (iconType) {
+      case 'single':
+        return <div className={`${iconClass} ${rectClass}`}></div>;
+      case 'two-columns':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className={`w-1 ${rectClass}`}></div>
+            <div className={`w-1 ${rectClass}`}></div>
+          </div>
+        );
+      case 'two-rows':
+        return (
+          <div className={`${iconClass} flex flex-col gap-0.5`}>
+            <div className={`h-1 ${rectClass}`}></div>
+            <div className={`h-1 ${rectClass}`}></div>
+          </div>
+        );
+      case 'main-3side':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className={`w-2 ${rectClass}`}></div>
+            <div className="flex flex-col gap-0.5">
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+            </div>
+          </div>
+        );
+      case 'main-4side':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className={`w-2 ${rectClass}`}></div>
+            <div className="flex flex-col gap-0.5">
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+            </div>
+          </div>
+        );
+      case 'main-expand':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className={`w-2 ${rectClass}`}></div>
+            <div className="flex flex-col gap-0.5">
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className="w-1 h-0.5 bg-slate-400 rounded-sm flex items-center justify-center">
+                <div className="text-slate-600 text-xs">▶</div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'side-main':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className={`w-1 ${rectClass}`}></div>
+            <div className={`w-2 ${rectClass}`}></div>
+          </div>
+        );
+      case 'side-main-2':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className="flex flex-col gap-0.5">
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+            </div>
+            <div className={`w-2 ${rectClass}`}></div>
+            <div className="flex flex-col gap-0.5">
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+              <div className={`w-1 h-0.5 ${rectClass}`}></div>
+            </div>
+          </div>
+        );
+      case 'three-columns':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className={`w-1 ${rectClass}`}></div>
+            <div className={`w-1 ${rectClass}`}></div>
+            <div className={`w-1 ${rectClass}`}></div>
+          </div>
+        );
+      case 'two-columns-alt':
+        return (
+          <div className={`${iconClass} flex gap-0.5`}>
+            <div className={`w-1.5 ${rectClass}`}></div>
+            <div className={`w-1 ${rectClass}`}></div>
+          </div>
+        );
+      case 'single-alt':
+        return <div className={`${iconClass} ${rectClass} border border-slate-300`}></div>;
+      default:
+        return <div className={`${iconClass} ${rectClass}`}></div>;
+    }
+  };
 
   // Get current scene data
   const currentScene = scenes[selectedScene];
@@ -119,7 +238,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     } else {
       videoRef.current.play();
     }
-    setIsPlaying(!isPlaying);
+    // Don't manually set state here - let the video events handle it
   };
 
   const toggleMute = () => {
@@ -505,13 +624,51 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
   return (
     <div className="w-full flex flex-col overflow-y-auto overflow-x-hidden h-full min-w-0 max-w-full">
+      {/* Landscape/Portrait Toggle - Top */}
+      <div className="flex-shrink-0 min-h-0 mb-3">
+        <div className="bg-slate-800 rounded-lg p-1 flex items-center justify-center w-fit mx-auto shadow-lg border border-slate-700">
+          <button
+            onClick={() => setVideoViewMode('landscape')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              videoViewMode === 'landscape'
+                ? 'bg-slate-600 text-white shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700'
+            }`}
+          >
+            Landscape
+          </button>
+          <button
+            onClick={() => setVideoViewMode('portrait')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              videoViewMode === 'portrait'
+                ? 'bg-slate-600 text-white shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700'
+            }`}
+          >
+            Portrait
+          </button>
+        </div>
+      </div>
+
       {/* Video Player */}
-      <div className="flex flex-col min-h-0 min-w-0">
+      <div className="flex flex-col min-h-0 w-full" style={{ minWidth: '500px' }}>
         {/* Main Video Container */}
-        <div className="relative bg-black rounded-lg group w-full min-w-0 shadow-lg">
+        <div 
+          className={`relative bg-black rounded-lg group shadow-lg transition-all duration-300 flex-shrink-0 flex items-center justify-center ${
+            videoViewMode === 'portrait' 
+              ? 'w-80 mx-auto aspect-[9/16]' 
+              : 'w-full aspect-video'
+          }`}
+          style={{
+            minWidth: videoViewMode === 'portrait' ? '320px' : '500px',
+            maxWidth: videoViewMode === 'portrait' ? '320px' : '100%'
+          }}
+          onMouseEnter={() => setIsVideoHovered(true)}
+          onMouseLeave={() => setIsVideoHovered(false)}
+        >
           {/* Fallback image if video fails to load */}
           {!mainVideoLoaded && (
-            <div className="w-full h-64 md:h-80 flex items-center justify-center bg-gray-900 rounded-md absolute inset-0 z-10">
+            <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-md absolute inset-0 z-10">
               <div className="text-center text-white">
                 <div className="text-4xl mb-2">🎬</div>
                 <p className="text-sm">Loading video...</p>
@@ -522,14 +679,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           <video
             ref={videoRef}
             src={currentScene?.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
-            className="w-full h-auto cursor-pointer"
+            className={`cursor-pointer transition-all duration-300 flex-shrink-0 ${
+              videoViewMode === 'portrait' ? 'aspect-[9/16]' : 'aspect-video'
+            }`}
+            style={{
+              width: videoViewMode === 'portrait' ? '320px' : '100%',
+              height: 'auto',
+              minWidth: videoViewMode === 'portrait' ? '320px' : '500px',
+              maxWidth: videoViewMode === 'portrait' ? '320px' : '100%',
+              objectFit: 'cover',
+              display: 'block'
+            }}
             poster={getCurrentThumbnail()}
             muted={isMuted}
             preload="auto"
             autoPlay={false}
             playsInline
             controls={false}
-            onClick={togglePlayPause}
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlayPause();
+            }}
             onLoadedMetadata={() => {
               if (videoRef.current) {
                 setDuration(videoRef.current.duration);
@@ -561,18 +731,180 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
             onCanPlay={() => {
               console.log('🎮 Main video can play');
             }}
-            style={{ 
-              backgroundColor: '#000000',
-              maxHeight: '60vh',
-              minHeight: '200px',
-              width: '100%',
-              height: 'auto',
-              display: 'block'
-            }}
           >
             Your browser does not support the video tag.
           </video>
           
+          {/* Hover Overlay with Video Controls and Thumbnail Button */}
+          {isVideoHovered && (
+            <div className="absolute inset-0 bg-black bg-opacity-30 z-20 transition-opacity duration-200 pointer-events-none">
+              {/* Thumbnail Capture Button - Top Right */}
+              <div className="absolute top-4 right-4 z-30 pointer-events-auto">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent video click
+                    console.log('🎬 Capture thumbnail clicked for scene:', selectedScene);
+                    
+                    // Force update thumbnail even if video isn't loaded
+                    let frameData = captureFrameFromVideo();
+                    
+                    // If capture failed, use a test image or current thumbnail
+                    if (!frameData) {
+                      console.log('🔄 Capture failed, using current scene thumbnail as test');
+                      frameData = currentScene.thumbnail;
+                    }
+                    
+                    if (frameData) {
+                      console.log('✅ Thumbnail ready, updating local and parent state');
+                      setCustomThumbnail(frameData);
+                      setShowThumbnails(false);
+                      
+                      // Force notify parent component
+                      if (onThumbnailUpdate) {
+                        console.log('📤 Notifying parent of thumbnail update for scene:', selectedScene);
+                        onThumbnailUpdate(selectedScene, frameData);
+                        
+                        // Show success feedback
+                        console.log('🎉 Thumbnail captured and updated successfully!');
+                        console.log('📱 This should update the LHS scene list');
+                        console.log('📋 This should update the publish popup thumbnails');
+                      } else {
+                        console.error('❌ onThumbnailUpdate callback is missing!');
+                      }
+                    } else {
+                      console.error('❌ No thumbnail data available');
+                    }
+                  }}
+                  size="sm"
+                  className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold flex items-center gap-2 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                >
+                  <span className="text-sm">📸</span>
+                  <span className="text-xs">Capture</span>
+                </Button>
+              </div>
+
+              {/* Video Controls - Bottom Center */}
+              <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full px-4 z-30 pointer-events-auto ${
+                videoViewMode === 'portrait' ? 'max-w-sm' : 'max-w-2xl'
+              }`}>
+                <div 
+                  className="bg-black bg-opacity-80 rounded-lg p-3 backdrop-blur-sm"
+                  onClick={(e) => e.stopPropagation()} // Prevent video click
+                >
+                  {/* All Controls in One Line */}
+                  <div className="flex items-center gap-2">
+                    {/* Play/Pause Button */}
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent video click
+                        togglePlayPause();
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full transition-all duration-200 flex-shrink-0"
+                    >
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </Button>
+                    
+                    {/* Time Display */}
+                    <span className="text-xs text-white font-mono min-w-[40px] flex-shrink-0">
+                      {formatTime(currentTime)}
+                    </span>
+                    
+                    {/* Progress Bar */}
+                    <div className="flex-1 relative min-w-0">
+                      <div 
+                        className="h-2 w-full bg-white/30 rounded-full cursor-pointer overflow-hidden touch-none"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent video click
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const percentage = (x / rect.width) * 100;
+                          const newTime = (percentage / 100) * duration;
+                          if (videoRef.current) {
+                            videoRef.current.currentTime = newTime;
+                            setCurrentTime(newTime);
+                          }
+                        }}
+                      >
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400 rounded-full transition-all duration-300 ease-out"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Duration Display */}
+                    <span className="text-xs text-white font-mono min-w-[40px] text-right flex-shrink-0">
+                      {formatTime(duration)}
+                    </span>
+                    
+                    {/* Skip Backward */}
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent video click
+                        skipBackward();
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full transition-all duration-200 flex-shrink-0"
+                      title="Skip backward 10s"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                    
+                    {/* Skip Forward */}
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent video click
+                        skipForward();
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full transition-all duration-200 flex-shrink-0"
+                      title="Skip forward 10s"
+                    >
+                      <RotateCw className="w-4 h-4" />
+                    </Button>
+                    
+                    {/* Volume Button */}
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent video click
+                        toggleMute();
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full transition-all duration-200 flex-shrink-0"
+                      title={isMuted ? "Unmute" : "Mute"}
+                    >
+                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </Button>
+                    
+                    {/* Speed Control - Only show in landscape mode */}
+                    {videoViewMode === 'landscape' && (
+                      <div onClick={(e) => e.stopPropagation()} className="flex-shrink-0">
+                        <Select value={playbackRate.toString()} onValueChange={(value) => setPlaybackRate(parseFloat(value))}>
+                          <SelectTrigger className="w-16 h-8 bg-white/20 border-white/30 text-white text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4].map(speed => (
+                              <SelectItem key={speed} value={speed.toString()}>
+                                {speed}x
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+
           {/* Logo Watermark Overlay */}
           {logoWatermark.image && (
             <div 
@@ -597,249 +929,75 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           <canvas ref={canvasRef} style={{ display: 'none' }} />
         </div>
 
-        {/* Video Controls Section */}
-        <div className="mt-3 flex-shrink-0 min-h-0">
-          {/* Enhanced Progress Bar Section */}
-          <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-t-xl rounded-b-none p-3 flex-shrink-0 w-full min-w-0 shadow-lg border border-slate-700 border-b-0">
-            <div className="flex items-center gap-4 w-full min-w-0">
-              {/* Play/Pause Button */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Button
-                  onClick={togglePlayPause}
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0 text-slate-200 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200"
+        {/* Unified Layout and Video Controls Bar */}
+        <div className="mt-0 flex-shrink-0 min-h-0">
+          {/* Layout Selection Section */}
+          <div className="bg-slate-600 rounded-lg p-2 flex items-center justify-between gap-1 w-full">
+            {/* Layout Options */}
+            <div className="flex items-center justify-center gap-1 flex-1">
+              {layoutOptions.map((layout) => (
+                <button
+                  key={layout.id}
+                  onClick={() => setSelectedLayout(layout.id)}
+                  className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                    selectedLayout === layout.id
+                      ? 'bg-slate-800 border-2 border-blue-500'
+                      : 'bg-slate-700 hover:bg-slate-800'
+                  }`}
+                  title={layout.name}
                 >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-                <span className="text-sm text-slate-200 font-mono min-w-[50px]">
-                  {formatTime(currentTime)}
-                </span>
-              </div>
-              
-              {/* Enhanced Progress Bar */}
-              <div className="flex-1 relative min-w-0">
-                <div 
-                  className="h-3 w-full bg-slate-700 rounded-full cursor-pointer overflow-hidden touch-none shadow-inner"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const percentage = (x / rect.width) * 100;
-                    const newTime = (percentage / 100) * duration;
-                    if (videoRef.current) {
-                      videoRef.current.currentTime = newTime;
-                      setCurrentTime(newTime);
-                    }
-                  }}
-                >
-                  <div 
-                    className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400 rounded-full transition-all duration-300 ease-out shadow-sm"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <div
-                  className="absolute top-1/2 transform -translate-y-1/2 h-5 w-5 bg-white rounded-full shadow-xl cursor-pointer transition-all duration-200 hover:scale-125 hover:shadow-2xl border-2 border-blue-400"
-                  style={{ left: `calc(${progress}% - 10px)` }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    const startX = e.clientX;
-                    const startProgress = progress;
-                    
-                    const handleMouseMove = (moveEvent: MouseEvent) => {
-                      const rect = (e.target as HTMLElement).parentElement?.getBoundingClientRect();
-                      if (!rect) return;
-                      
-                      const deltaX = moveEvent.clientX - startX;
-                      const deltaProgress = (deltaX / rect.width) * 100;
-                      const newProgress = Math.max(0, Math.min(100, startProgress + deltaProgress));
-                      const newTime = (newProgress / 100) * duration;
-                      
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = newTime;
-                        setCurrentTime(newTime);
-                      }
-                    };
-                    
-                    const handleMouseUp = () => {
-                      document.removeEventListener('mousemove', handleMouseMove);
-                      document.removeEventListener('mouseup', handleMouseUp);
-                    };
-                    
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
-                  }}
-                />
-              </div>
-              
-              {/* Duration Display */}
-              <span className="text-sm text-slate-300 font-mono min-w-[50px] text-right flex-shrink-0">
-                {formatTime(duration)}
-              </span>
-              
-              {/* Enhanced Control Buttons */}
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {/* Skip Buttons */}
-                <Button
-                  onClick={skipBackward}
-                  size="sm"
-                  variant="ghost"
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200 hover:scale-105"
-                  title="Skip backward 10s"
-                >
-                  <SkipBack className="w-4 h-4" />
-                </Button>
-                
-                <Button
-                  onClick={skipForward}
-                  size="sm"
-                  variant="ghost"
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200 hover:scale-105"
-                  title="Skip forward 10s"
-                >
-                  <SkipForward className="w-4 h-4" />
-                </Button>
-                
-                {/* Volume Button */}
-                <Button
-                  onClick={toggleMute}
-                  size="sm"
-                  variant="ghost"
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-white hover:bg-slate-700 rounded-full transition-all duration-200 hover:scale-105"
-                  title={isMuted ? "Unmute" : "Mute"}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </Button>
-                
-                {/* Speed Control Dropdown */}
-                <div className="flex items-center ml-2">
-                  <Select value={playbackRate.toString()} onValueChange={(value) => changePlaybackRate(parseFloat(value))}>
-                    <SelectTrigger className="w-16 h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs rounded-full hover:bg-slate-600 transition-colors">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
-                      <SelectItem value="0.25" className="text-slate-200 hover:bg-slate-700">0.25x</SelectItem>
-                      <SelectItem value="0.5" className="text-slate-200 hover:bg-slate-700">0.5x</SelectItem>
-                      <SelectItem value="0.75" className="text-slate-200 hover:bg-slate-700">0.75x</SelectItem>
-                      <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">1x</SelectItem>
-                      <SelectItem value="1.25" className="text-slate-200 hover:bg-slate-700">1.25x</SelectItem>
-                      <SelectItem value="1.5" className="text-slate-200 hover:bg-slate-700">1.5x</SelectItem>
-                      <SelectItem value="1.75" className="text-slate-200 hover:bg-slate-700">1.75x</SelectItem>
-                      <SelectItem value="2" className="text-slate-200 hover:bg-slate-700">2x</SelectItem>
-                      <SelectItem value="2.5" className="text-slate-200 hover:bg-slate-700">2.5x</SelectItem>
-                      <SelectItem value="3" className="text-slate-200 hover:bg-slate-700">3x</SelectItem>
-                      <SelectItem value="3.5" className="text-slate-200 hover:bg-slate-700">3.5x</SelectItem>
-                      <SelectItem value="4" className="text-slate-200 hover:bg-slate-700">4x</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Enhanced Publish Button */}
-                {onPublishAllScenes && (
-                  <Button
-                    onClick={onPublishAllScenes}
-                    size="sm"
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ml-3 shadow-lg hover:shadow-xl hover:scale-105"
-                    title="Publish Video"
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span className="text-sm">Publish</span>
-                  </Button>
-                )}
-              </div>
+                  {renderLayoutIcon(layout.icon)}
+                </button>
+              ))}
             </div>
+            
+            {/* Publish Button */}
+            {onPublishAllScenes && (
+              <Button
+                onClick={() => onPublishAllScenes()}
+                size="sm"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold flex items-center gap-2 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex-shrink-0"
+                title="Publish Video"
+              >
+                <Upload className="w-4 h-4" />
+                <span className="text-sm">Publish</span>
+              </Button>
+            )}
           </div>
+          
 
-          {/* Simplified Video Action Buttons */}
-          <div className="bg-slate-800 rounded-b-xl p-3 flex-shrink-0 w-full min-w-0 -mt-1 rounded-t-none border border-slate-700 border-t-0">
-            <div className="flex items-center justify-center mb-2">
-              <h3 className="text-xs text-slate-400 font-medium">Video Actions</h3>
-            </div>
-            <div className="flex items-center justify-center gap-1 w-full">
-              <Button
-                onClick={() => setShowVerticalPreview(true)}
-                size="sm"
-                className="bg-slate-700 hover:bg-blue-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
-              >
-                <Eye className="w-3 h-3" />
-                <span>Vertical Preview</span>
-              </Button>
-              
-              <Button
-                size="sm"
-                onClick={() => setShowLogoSettings(true)}
-                className="bg-slate-700 hover:bg-purple-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
-              >
-                <span className="text-xs">🏷️</span>
-                <span>Logo</span>
-              </Button>
-              
-              <Button
-                size="sm"
-                onClick={() => setShowThumbnails(true)}
-                className="bg-slate-700 hover:bg-pink-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
-              >
-                <span className="text-xs">🎨</span>
-                <span>Custom</span>
-              </Button>
-              
-              <Button
-                onClick={() => {
-                  console.log('🎬 Make Video thumbnail clicked for scene:', selectedScene);
-                  
-                  // Force update thumbnail even if video isn't loaded
-                  let frameData = captureFrameFromVideo();
-                  
-                  // If capture failed, use a test image or current thumbnail
-                  if (!frameData) {
-                    console.log('🔄 Capture failed, using current scene thumbnail as test');
-                    frameData = currentScene.thumbnail;
-                  }
-                  
-                  if (frameData) {
-                    console.log('✅ Thumbnail ready, updating local and parent state');
-                    setCustomThumbnail(frameData);
-                    setShowThumbnails(false);
-                    
-                    // Force notify parent component
-                    if (onThumbnailUpdate) {
-                      console.log('📤 FORCE notifying parent of thumbnail update for scene:', selectedScene);
-                      onThumbnailUpdate(selectedScene, frameData);
-                      
-                      // Also force a re-render by updating state again
-                      setTimeout(() => {
-                        console.log('🔄 Double-check: ensuring thumbnail update');
-                        onThumbnailUpdate(selectedScene, frameData);
-                      }, 100);
-                    } else {
-                      console.error('❌ onThumbnailUpdate callback is missing!');
-                    }
-                    
-                    // Show brief success feedback
-                    const button = document.querySelector('[data-capture-btn]');
-                    if (button) {
-                      button.textContent = '✅ Captured!';
-                      setTimeout(() => {
-                        button.textContent = '📸 Make Video thumbnail';
-                      }, 1500);
-                    }
-                  } else {
-                    console.error('❌ No thumbnail data available');
-                  }
-                }}
-                data-capture-btn
-                size="sm"
-                className="bg-slate-700 hover:bg-emerald-600 text-slate-200 hover:text-white font-medium flex items-center gap-1 px-3 py-2 text-xs rounded-md transition-colors duration-200"
-              >
-                <span className="text-xs">📸</span>
-                <span>Thumbnail</span>
-              </Button>
-
-            </div>
-          </div>
 
 
         </div>
       </div>
+
+      {/* Layout Selection Modal */}
+      <Dialog open={showLayoutSelection} onOpenChange={setShowLayoutSelection}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Layout Options</DialogTitle>
+          </DialogHeader>
+          <div className="bg-slate-600 rounded-lg p-2 flex items-center justify-center gap-1 w-full">
+            {layoutOptions.map((layout) => (
+              <button
+                key={layout.id}
+                onClick={() => {
+                  setSelectedLayout(layout.id);
+                  setShowLayoutSelection(false);
+                }}
+                className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                  selectedLayout === layout.id
+                    ? 'bg-slate-800 border-2 border-blue-500'
+                    : 'bg-slate-700 hover:bg-slate-800'
+                }`}
+                title={layout.name}
+              >
+                {renderLayoutIcon(layout.icon)}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Custom Thumbnail Status */}
       {customThumbnail && (
@@ -1236,7 +1394,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                                 }}
                                 className="text-white hover:bg-white/20"
                               >
-                                <SkipBack className="w-4 h-4" />
+                                <RotateCcw className="w-4 h-4" />
                               </Button>
                               <Button
                                 size="sm"
@@ -1282,7 +1440,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                                 }}
                                 className="text-white hover:bg-white/20"
                               >
-                                <SkipForward className="w-4 h-4" />
+                                <RotateCw className="w-4 h-4" />
                               </Button>
                             </div>
                             <div className="text-white text-sm font-medium">
