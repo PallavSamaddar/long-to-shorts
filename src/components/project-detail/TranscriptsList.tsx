@@ -7,9 +7,11 @@ interface TranscriptsListProps {
   selectedScene: number;
   onTranscriptUpdate?: (sceneIndex: number, newTranscript: string) => void;
   updatedTranscripts?: { [key: number]: string };
+  isCreatingClip?: boolean;
+  onClipModeExit?: () => void;
 }
 
-const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTranscriptUpdate, updatedTranscripts }) => {
+const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTranscriptUpdate, updatedTranscripts, isCreatingClip = false, onClipModeExit }) => {
   const [transcriptText, setTranscriptText] = useState('');
   const [fullScriptText, setFullScriptText] = useState('');
   const [currentSceneHeight, setCurrentSceneHeight] = useState(150); // Default height for current scene
@@ -21,9 +23,13 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
 
   // Initialize transcript text and full script when component mounts or scene changes
   React.useEffect(() => {
-    setTranscriptText(currentTranscript);
+    if (isCreatingClip) {
+      setTranscriptText(''); // Show blank when creating clip
+    } else {
+      setTranscriptText(currentTranscript);
+    }
     setFullScriptText(getFullScript());
-  }, [currentTranscript, updatedTranscripts]);
+  }, [currentTranscript, updatedTranscripts, isCreatingClip]);
 
   // Get full script (all scenes combined)
   const getFullScript = () => {

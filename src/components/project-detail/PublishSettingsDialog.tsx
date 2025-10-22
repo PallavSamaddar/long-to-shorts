@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Upload, Video, PlayCircle, FolderOpen, Smartphone, Monitor, RotateCcw } from 'lucide-react';
+import { Upload, Video, PlayCircle, FolderOpen, Smartphone, Monitor, RotateCcw, Download, DownloadCloud, Image } from 'lucide-react';
 
 interface PublishSettingsDialogProps {
   isOpen: boolean;
@@ -30,6 +30,7 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
   const [selectedThumbnails, setSelectedThumbnails] = useState<{ [key: number]: string }>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [uploadedThumbnail, setUploadedThumbnail] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Only Slike platform is available for publishing
@@ -79,6 +80,37 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
       // Fallback to navigation
       navigate('/projects');
     }
+  };
+
+  const handleDownloadAll = () => {
+    // Simulate downloading all videos
+    console.log('📥 Downloading all videos...');
+    // In a real app, this would trigger actual download
+    alert('Downloading all videos...');
+  };
+
+  const handleDownloadCurrent = () => {
+    // Simulate downloading current video
+    console.log('📥 Downloading current video...');
+    // In a real app, this would trigger actual download
+    alert('Downloading current video...');
+  };
+
+  const handleThumbnailUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setUploadedThumbnail(result);
+        console.log('📸 Thumbnail uploaded:', file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveUploadedThumbnail = () => {
+    setUploadedThumbnail(null);
   };
 
 
@@ -478,16 +510,90 @@ const PublishSettingsDialog: React.FC<PublishSettingsDialogProps> = ({
         </div>
 
         {/* Fixed Footer */}
-        <div className="flex-shrink-0 flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handlePublish}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Process to Slike
-          </Button>
+        <div className="flex-shrink-0 pt-4 border-t border-gray-200">
+          {/* Thumbnail Upload Section */}
+          <div className="mb-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">Custom Thumbnail</h4>
+            <div className="space-y-3">
+              {uploadedThumbnail ? (
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <img 
+                      src={uploadedThumbnail} 
+                      alt="Uploaded thumbnail" 
+                      className="w-20 h-14 object-cover rounded border"
+                    />
+                    <button
+                      onClick={handleRemoveUploadedThumbnail}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">Custom thumbnail uploaded</p>
+                    <p className="text-xs text-gray-500">This will be used for the published video</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailUpload}
+                    className="hidden"
+                    id="thumbnail-upload"
+                  />
+                  <label 
+                    htmlFor="thumbnail-upload" 
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <Image className="w-8 h-8 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Upload Custom Thumbnail</p>
+                      <p className="text-xs text-gray-500">Click to select an image file</p>
+                    </div>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Download Options */}
+          <div className="mb-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">Download Options</h4>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={handleDownloadCurrent}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download Current Video
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleDownloadAll}
+                className="flex items-center gap-2"
+              >
+                <DownloadCloud className="w-4 h-4" />
+                Download All Videos
+              </Button>
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePublish}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Process to Slike
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

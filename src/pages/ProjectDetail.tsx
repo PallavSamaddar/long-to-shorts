@@ -5,6 +5,7 @@ import ScenesListFinal from '@/components/project-detail/ScenesListFinal';
 import TranscriptsList from '@/components/project-detail/TranscriptsList';
 import VideoPlayer from '@/components/project-detail/VideoPlayer';
 import PublishSettingsDialog from '@/components/project-detail/PublishSettingsDialog';
+import ClipsManager from '@/components/project-detail/ClipsManager';
 import { ResizablePanels } from '@/components/ui/resizable-panels';
 import { scenes } from '@/data/projectDetailData';
 
@@ -21,6 +22,17 @@ const ProjectDetail = () => {
     opacity: 50
   });
   const [projectStatus, setProjectStatus] = useState<'In queue' | 'Published'>('In queue');
+  const [clips, setClips] = useState<Array<{
+    id: string;
+    name: string;
+    transcript: string;
+    startTime: number;
+    endTime: number;
+    createdAt: Date;
+  }>>([]);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isCreatingClip, setIsCreatingClip] = useState(false);
 
   const handleSceneSelect = (index: number) => {
     setSelectedScene(index);
@@ -75,6 +87,65 @@ const ProjectDetail = () => {
     navigate('/');
   };
 
+  // Clip management functions
+  const handleClipCreate = (clipData: {
+    name: string;
+    transcript: string;
+    startTime: number;
+    endTime: number;
+  }) => {
+    const newClip = {
+      id: Date.now().toString(),
+      ...clipData,
+      createdAt: new Date()
+    };
+    setClips(prev => [...prev, newClip]);
+  };
+
+  const handleClipUpdate = (clipId: string, updates: Partial<{
+    id: string;
+    name: string;
+    transcript: string;
+    startTime: number;
+    endTime: number;
+    createdAt: Date;
+  }>) => {
+    setClips(prev => prev.map(clip => 
+      clip.id === clipId ? { ...clip, ...updates } : clip
+    ));
+  };
+
+  const handleClipDelete = (clipId: string) => {
+    setClips(prev => prev.filter(clip => clip.id !== clipId));
+  };
+
+  const handleClipSelect = (clipId: string) => {
+    const clip = clips.find(c => c.id === clipId);
+    if (clip) {
+      console.log('🎬 Selected clip:', clip.name);
+      // You can add logic here to jump to the clip's time in the video
+    }
+  };
+
+  const handleVideoTimeUpdate = (time: number, videoDuration: number) => {
+    setCurrentTime(time);
+    setDuration(videoDuration);
+  };
+
+  const handleCreateClipClick = () => {
+    // Create a new clip with current video time as start time
+    const newClip = {
+      id: Date.now().toString(),
+      name: `Clip ${clips.length + 1}`,
+      transcript: '',
+      startTime: currentTime,
+      endTime: currentTime + 30, // Default 30 seconds duration
+      createdAt: new Date()
+    };
+    setClips(prev => [...prev, newClip]);
+    setIsCreatingClip(true);
+  };
+
 
   return (
     <div className="h-screen bg-slate-50 flex flex-col w-full overflow-hidden">
@@ -89,12 +160,22 @@ const ProjectDetail = () => {
             onNextScene={handleNextScene}
             updatedThumbnails={updatedThumbnails}
             projectStatus={projectStatus}
+            clips={clips}
+            onClipCreate={handleClipCreate}
+            onClipUpdate={handleClipUpdate}
+            onClipDelete={handleClipDelete}
+            onClipSelect={handleClipSelect}
+            currentTime={currentTime}
+            duration={duration}
+            onCreateClipClick={handleCreateClipClick}
           />
           
           <TranscriptsList
             selectedScene={selectedScene}
             onTranscriptUpdate={handleTranscriptUpdate}
             updatedTranscripts={updatedTranscripts}
+            isCreatingClip={isCreatingClip}
+            onClipModeExit={() => setIsCreatingClip(false)}
           />
           
           <VideoPlayer 
@@ -103,6 +184,7 @@ const ProjectDetail = () => {
             onLogoUpdate={handleLogoUpdate}
             onPublishAllScenes={handlePublishAllScenes}
             updatedThumbnails={updatedThumbnails}
+            onTimeUpdate={handleVideoTimeUpdate}
           />
         </ResizablePanels>
       </main>

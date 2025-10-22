@@ -5,7 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, Info, Upload, Eye, X, Maximize2, Minimize2 } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, Info, Upload, Eye, X, Maximize2, Minimize2, Sparkles } from 'lucide-react';
 import { scenes } from '@/data/projectDetailData';
 import LogoWatermark from './LogoWatermark';
 
@@ -14,10 +14,11 @@ interface VideoPlayerProps {
   onThumbnailUpdate?: (sceneIndex: number, thumbnailUrl: string) => void;
   onLogoUpdate?: (logoData: { image: string | null; position: string; opacity: number }) => void;
   onPublishAllScenes?: () => void;
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
   updatedThumbnails?: { [key: number]: string };
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpdate, onLogoUpdate, onPublishAllScenes, updatedThumbnails }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpdate, onLogoUpdate, onPublishAllScenes, onTimeUpdate, updatedThumbnails }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [thumbnailIsPlaying, setThumbnailIsPlaying] = useState(false);
@@ -58,6 +59,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
   // Layout options data - Enhanced with better names and clearer icons
   const layoutOptions = [
+    { id: -1, name: 'AI Choose Best', icon: 'ai-choose', isAI: true },
     { id: 0, name: 'Single Full', icon: 'single-full' },
     { id: 1, name: 'Split Vertical', icon: 'split-vertical' },
     { id: 2, name: 'Split Horizontal', icon: 'split-horizontal' },
@@ -75,6 +77,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const renderLayoutIcon = (iconType: string) => {
     const iconClass = "w-3 h-2";
     const rectClass = "bg-white rounded-sm";
+    
+    // Handle AI icon specially
+    if (iconType === 'ai-choose') {
+      return <Sparkles className="w-4 h-4 text-yellow-400" />;
+    }
     const smallRectClass = "bg-white rounded-sm";
     
     switch (iconType) {
@@ -557,6 +564,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         onTimeUpdate={() => {
           if (videoRef.current) {
             setCurrentTime(videoRef.current.currentTime);
+            onTimeUpdate?.(videoRef.current.currentTime, videoRef.current.duration);
           }
         }}
         onPlay={() => setIsPlaying(true)}
@@ -604,6 +612,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     if (!layout) return videoElement;
 
     switch (layout.icon) {
+      case 'ai-choose':
+        // AI will choose the best layout - for now, default to single-full
+        // In a real implementation, this would analyze the video content and choose optimally
+        return (
+          <div className="w-full h-full relative">
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg">
+              <div className="text-center">
+                <Sparkles className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+                <p className="text-sm font-medium text-gray-700">AI Choosing Best Layout...</p>
+                <p className="text-xs text-gray-500 mt-1">Analyzing video content</p>
+              </div>
+            </div>
+            {videoElement}
+          </div>
+        );
+        
       case 'single-full':
         return (
           <div className="w-full h-full relative">
@@ -1211,9 +1235,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   key={layout.id}
                   onClick={() => setSelectedLayout(layout.id)}
                   className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
-                    selectedLayout === layout.id
-                      ? 'bg-slate-800 border-2 border-blue-500'
-                      : 'bg-slate-700 hover:bg-slate-800'
+                    layout.isAI 
+                      ? selectedLayout === layout.id
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-300 text-white'
+                        : 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white'
+                      : selectedLayout === layout.id
+                        ? 'bg-slate-800 border-2 border-blue-500'
+                        : 'bg-slate-700 hover:bg-slate-800'
                   }`}
                   title={layout.name}
                 >
@@ -1257,9 +1285,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                   setShowLayoutSelection(false);
                 }}
                 className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
-                  selectedLayout === layout.id
-                    ? 'bg-slate-800 border-2 border-blue-500'
-                    : 'bg-slate-700 hover:bg-slate-800'
+                  layout.isAI 
+                    ? selectedLayout === layout.id
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-300 text-white'
+                      : 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white'
+                    : selectedLayout === layout.id
+                      ? 'bg-slate-800 border-2 border-blue-500'
+                      : 'bg-slate-700 hover:bg-slate-800'
                 }`}
                 title={layout.name}
               >
