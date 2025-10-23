@@ -49,7 +49,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const [userThumbnails, setUserThumbnails] = useState<string[]>([]);
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [videoViewMode, setVideoViewMode] = useState<'landscape' | 'portrait'>('landscape');
-  const [selectedLayout, setSelectedLayout] = useState<number>(2); // Default to layout 2 (two horizontal rectangles)
+  const [selectedLayout, setSelectedLayout] = useState<number>(2); // Default to Split Horizontal layout
+  const [selectedCaption, setSelectedCaption] = useState<string>('none'); // Default to no captions
   const [showLayoutSelection, setShowLayoutSelection] = useState(false);
   const [selectedVerticalLayout, setSelectedVerticalLayout] = useState<string>('focused-on-one');
   const [selectedCaptionStyle, setSelectedCaptionStyle] = useState<string>('none');
@@ -61,19 +62,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const layoutOptions = [
     { id: -1, name: 'AI Choose Best', icon: 'ai-choose', isAI: true },
     { id: 0, name: 'Single Full', icon: 'single-full' },
-    { id: 1, name: 'Split Vertical', icon: 'split-vertical' },
-    { id: 2, name: 'Split Horizontal', icon: 'split-horizontal' },
-    { id: 3, name: 'PIP Top-Right', icon: 'pip-top-right' },
-    { id: 4, name: 'PIP Bottom-Right', icon: 'pip-bottom-right' },
-    { id: 5, name: 'PIP Bottom-Left', icon: 'pip-bottom-left' },
-    { id: 6, name: 'PIP Top-Left', icon: 'pip-top-left' },
-    { id: 7, name: 'Sidebar Right', icon: 'sidebar-right' },
-    { id: 8, name: 'Sidebar Left', icon: 'sidebar-left' },
-    { id: 9, name: 'Header Layout', icon: 'header-layout' },
-    { id: 10, name: 'Footer Layout', icon: 'footer-layout' }
+    { id: 2, name: 'Split Horizontal', icon: 'split-horizontal' }
   ];
 
-  // Function to render layout icon - Enhanced with clear, descriptive icons
+  const captionOptions = [
+    { id: 'none', name: 'No Captions', icon: 'none' },
+    { id: 'minimal', name: 'Minimal', icon: 'minimal' },
+    { id: 'modern', name: 'Modern', icon: 'modern' },
+    { id: 'bold', name: 'Bold', icon: 'bold' },
+    { id: 'elegant', name: 'Elegant', icon: 'elegant' },
+    { id: 'neon', name: 'Neon', icon: 'neon' },
+    { id: 'retro', name: 'Retro', icon: 'retro' }
+  ];
+
+  // Function to render layout icon
   const renderLayoutIcon = (iconType: string) => {
     const iconClass = "w-3 h-2";
     const rectClass = "bg-white rounded-sm";
@@ -82,19 +84,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     if (iconType === 'ai-choose') {
       return <Sparkles className="w-4 h-4 text-yellow-400" />;
     }
-    const smallRectClass = "bg-white rounded-sm";
     
     switch (iconType) {
       case 'single-full':
         return <div className={`${iconClass} ${rectClass}`}></div>;
-      
-      case 'split-vertical':
-        return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className={`w-1 ${rectClass}`}></div>
-            <div className={`w-1 ${rectClass}`}></div>
-          </div>
-        );
       
       case 'split-horizontal':
         return (
@@ -104,68 +97,63 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           </div>
         );
       
-      case 'pip-top-right':
+      default:
+        return <div className={`${iconClass} ${rectClass}`}></div>;
+    }
+  };
+
+  // Function to render caption style icon
+  const renderCaptionIcon = (iconType: string) => {
+    const iconClass = "w-3 h-3";
+    
+    switch (iconType) {
+      case 'none':
+        return <div className={`${iconClass} bg-slate-400/60 rounded-sm`}></div>;
+      
+      case 'minimal':
         return (
-          <div className={`${iconClass} relative ${rectClass}`}>
-            <div className="absolute top-0 right-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          <div className={`${iconClass} bg-slate-300/40 rounded-sm flex items-center justify-center`}>
+            <div className="w-1.5 h-0.5 bg-slate-500 rounded-sm"></div>
           </div>
         );
       
-      case 'pip-bottom-right':
+      case 'modern':
         return (
-          <div className={`${iconClass} relative ${rectClass}`}>
-            <div className="absolute bottom-0 right-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          <div className={`${iconClass} bg-blue-300/40 rounded-sm flex items-center justify-center`}>
+            <div className="w-1.5 h-0.5 bg-blue-500 rounded-sm"></div>
           </div>
         );
       
-      case 'pip-bottom-left':
+      case 'bold':
         return (
-          <div className={`${iconClass} relative ${rectClass}`}>
-            <div className="absolute bottom-0 left-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          <div className={`${iconClass} bg-yellow-300/40 rounded-sm flex items-center justify-center`}>
+            <div className="w-1.5 h-0.5 bg-yellow-500 rounded-sm font-bold"></div>
           </div>
         );
       
-      case 'pip-top-left':
+      case 'elegant':
         return (
-          <div className={`${iconClass} relative ${rectClass}`}>
-            <div className="absolute top-0 left-0 w-1 h-1 bg-slate-400 rounded-sm"></div>
+          <div className={`${iconClass} bg-purple-300/40 rounded-full flex items-center justify-center`}>
+            <div className="w-1.5 h-0.5 bg-purple-500 rounded-full"></div>
           </div>
         );
       
-      case 'sidebar-right':
+      case 'neon':
         return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className={`w-2 ${rectClass}`}></div>
-            <div className={`w-1 ${rectClass}`}></div>
+          <div className={`${iconClass} bg-green-300/40 rounded-sm flex items-center justify-center`}>
+            <div className="w-1.5 h-0.5 bg-green-500 rounded-sm shadow-sm"></div>
           </div>
         );
       
-      case 'sidebar-left':
+      case 'retro':
         return (
-          <div className={`${iconClass} flex gap-0.5`}>
-            <div className={`w-1 ${rectClass}`}></div>
-            <div className={`w-2 ${rectClass}`}></div>
-          </div>
-        );
-      
-      case 'header-layout':
-        return (
-          <div className={`${iconClass} flex flex-col gap-0.5`}>
-            <div className={`h-0.5 ${rectClass}`}></div>
-            <div className={`h-1.5 ${rectClass}`}></div>
-          </div>
-        );
-      
-      case 'footer-layout':
-        return (
-          <div className={`${iconClass} flex flex-col gap-0.5`}>
-            <div className={`h-1.5 ${rectClass}`}></div>
-            <div className={`h-0.5 ${rectClass}`}></div>
+          <div className={`${iconClass} bg-orange-300/40 rounded-sm flex items-center justify-center`}>
+            <div className="w-1.5 h-0.5 bg-orange-500 rounded-sm"></div>
           </div>
         );
       
       default:
-        return <div className={`${iconClass} ${rectClass}`}></div>;
+        return <div className={`${iconClass} bg-slate-400/60 rounded-sm`}></div>;
     }
   };
 
@@ -521,7 +509,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     ctx.fillStyle = 'white';
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('Scene ' + (selectedScene + 1), 160, 100);
+    ctx.fillText('Clip ' + (selectedScene + 1), 160, 100);
     
     ctx.font = '16px Arial';
     ctx.fillText('Thumbnail', 160, 130);
@@ -529,8 +517,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     return canvas.toDataURL('image/jpeg', 0.8);
   };
 
-  // Function to render video player based on selected layout
-  const renderLayoutBasedVideoPlayer = () => {
+  // Function to render video player with selected caption style
+  const renderVideoPlayerWithCaptions = () => {
     const videoElement = (
       <video
         ref={videoRef}
@@ -611,11 +599,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     const layout = layoutOptions.find(l => l.id === selectedLayout);
     if (!layout) return videoElement;
 
+    // Render layout first
+    let layoutElement;
     switch (layout.icon) {
       case 'ai-choose':
-        // AI will choose the best layout - for now, default to single-full
-        // In a real implementation, this would analyze the video content and choose optimally
-        return (
+        layoutElement = (
           <div className="w-full h-full relative">
             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg">
               <div className="text-center">
@@ -627,28 +615,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
             {videoElement}
           </div>
         );
+        break;
         
       case 'single-full':
-        return (
+        layoutElement = (
           <div className="w-full h-full relative">
             {videoElement}
           </div>
         );
-
-      case 'split-vertical':
-        return (
-          <div className="w-full h-full flex gap-2">
-            <div className="w-1/2 h-full relative">
-              {videoElement}
-            </div>
-            <div className="w-1/2 h-full relative rounded overflow-hidden">
-              {secondaryVideoElement}
-            </div>
-          </div>
-        );
+        break;
 
       case 'split-horizontal':
-        return (
+        layoutElement = (
           <div className="w-full h-full flex flex-col gap-2">
             <div className="w-full h-1/2 relative">
               {videoElement}
@@ -658,127 +636,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
             </div>
           </div>
         );
-
-      case 'pip-top-right':
-        return (
-          <div className="w-full h-full relative">
-            <div className="w-full h-full">
-              {videoElement}
-            </div>
-            <div className="absolute top-4 right-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
-              {secondaryVideoElement}
-            </div>
-          </div>
-        );
-
-      case 'pip-bottom-right':
-        return (
-          <div className="w-full h-full relative">
-            <div className="w-full h-full">
-              {videoElement}
-            </div>
-            <div className="absolute bottom-4 right-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
-              {secondaryVideoElement}
-            </div>
-          </div>
-        );
-
-      case 'pip-bottom-left':
-        return (
-          <div className="w-full h-full relative">
-            <div className="w-full h-full">
-              {videoElement}
-            </div>
-            <div className="absolute bottom-4 left-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
-              {secondaryVideoElement}
-            </div>
-          </div>
-        );
-
-      case 'pip-top-left':
-        return (
-          <div className="w-full h-full relative">
-            <div className="w-full h-full">
-              {videoElement}
-            </div>
-            <div className="absolute top-4 left-4 w-1/3 h-1/3 rounded border-2 border-white overflow-hidden">
-              {secondaryVideoElement}
-            </div>
-          </div>
-        );
-
-      case 'sidebar-right':
-        return (
-          <div className="w-full h-full flex gap-2">
-            <div className="w-2/3 h-full relative">
-              {videoElement}
-            </div>
-            <div className="w-1/3 h-full rounded flex flex-col gap-2">
-              <div className="h-1/3 relative rounded overflow-hidden">
-                {secondaryVideoElement}
-              </div>
-              <div className="h-1/3 relative rounded overflow-hidden">
-                {secondaryVideoElement}
-              </div>
-              <div className="h-1/3 relative rounded overflow-hidden">
-                {secondaryVideoElement}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'sidebar-left':
-        return (
-          <div className="w-full h-full flex gap-2">
-            <div className="w-1/3 h-full rounded flex flex-col gap-2">
-              <div className="h-1/3 relative rounded overflow-hidden">
-                {secondaryVideoElement}
-              </div>
-              <div className="h-1/3 relative rounded overflow-hidden">
-                {secondaryVideoElement}
-              </div>
-              <div className="h-1/3 relative rounded overflow-hidden">
-                {secondaryVideoElement}
-              </div>
-            </div>
-            <div className="w-2/3 h-full relative">
-              {videoElement}
-            </div>
-          </div>
-        );
-
-      case 'header-layout':
-        return (
-          <div className="w-full h-full flex flex-col gap-2">
-            <div className="w-full h-1/4 relative rounded overflow-hidden">
-              {secondaryVideoElement}
-            </div>
-            <div className="w-full h-3/4 relative">
-              {videoElement}
-            </div>
-          </div>
-        );
-
-      case 'footer-layout':
-        return (
-          <div className="w-full h-full flex flex-col gap-2">
-            <div className="w-full h-3/4 relative">
-              {videoElement}
-            </div>
-            <div className="w-full h-1/4 relative rounded overflow-hidden">
-              {secondaryVideoElement}
-            </div>
-          </div>
-        );
+        break;
 
       default:
-        return (
+        layoutElement = (
           <div className="w-full h-full relative">
             {videoElement}
           </div>
         );
     }
+
+    // Add caption overlay if not 'none'
+    if (selectedCaption !== 'none') {
+      return (
+        <div className="w-full h-full relative">
+          {layoutElement}
+          <div className="absolute bottom-4 left-4 right-4 text-center z-10">
+            <div className={`inline-block px-4 py-2 rounded-lg text-white font-medium ${
+              selectedCaption === 'minimal' ? 'bg-gray-900 bg-opacity-75' :
+              selectedCaption === 'modern' ? 'bg-blue-600 bg-opacity-90' :
+              selectedCaption === 'bold' ? 'bg-yellow-500 text-gray-900 font-bold' :
+              selectedCaption === 'elegant' ? 'bg-purple-600 bg-opacity-90 rounded-full' :
+              selectedCaption === 'neon' ? 'bg-green-500 text-gray-900 font-bold shadow-lg' :
+              selectedCaption === 'retro' ? 'bg-orange-500 text-white' :
+              'bg-gray-900 bg-opacity-75'
+            }`}>
+              Sample Caption Text
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return layoutElement;
   };
+
 
   const captureVerticalFrameFromVideo = () => {
     const video = videoRef.current;
@@ -947,6 +839,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </div>
       </div>
 
+      {/* Disclaimer */}
+      <div className="flex-shrink-0 min-h-0 mb-2">
+        <p className="text-xs text-amber-600 text-center">
+          ⚠️ This is a tentative preview — final output will differ.
+        </p>
+      </div>
+
       {/* Video Player */}
       <div className="flex flex-col min-h-0 w-full" style={{ minWidth: '500px' }}>
         {/* Main Video Container */}
@@ -969,12 +868,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
               <div className="text-center text-white">
                 <div className="text-4xl mb-2">🎬</div>
                 <p className="text-sm">Loading video...</p>
-                <p className="text-xs text-gray-400 mt-1">Scene {selectedScene + 1}</p>
+                <p className="text-xs text-gray-400 mt-1">Clip {selectedScene + 1}</p>
               </div>
             </div>
           )}
           {/* Layout-based Video Player */}
-          {renderLayoutBasedVideoPlayer()}
+          {renderVideoPlayerWithCaptions()}
           
           {/* Hover Overlay with Video Controls and Thumbnail Button */}
           {isVideoHovered && (
@@ -1224,24 +1123,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
           </div>
         )}
 
-        {/* Unified Layout and Video Controls Bar */}
-        <div className="mt-2 flex-shrink-0 min-h-0">
-          {/* Layout Selection Section */}
-          <div className="bg-slate-600 rounded-lg p-3 flex items-center justify-between gap-3 w-full min-w-0">
+        {/* Sleek Layout and Caption Selection Bar */}
+        <div className="mt-3 flex-shrink-0 min-h-0">
+          <div className="bg-gradient-to-r from-slate-700 to-slate-600 rounded-xl p-4 flex items-center justify-between gap-4 w-full min-w-0 shadow-lg border border-slate-500/20 backdrop-blur-sm">
             {/* Layout Options */}
-            <div className="flex items-center justify-center gap-2 flex-1 min-w-0 overflow-x-auto">
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">Layout</span>
               {layoutOptions.map((layout) => (
                 <button
                   key={layout.id}
                   onClick={() => setSelectedLayout(layout.id)}
-                  className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                  className={`w-9 h-7 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-105 ${
                     layout.isAI 
                       ? selectedLayout === layout.id
-                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-300 text-white'
-                        : 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white'
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-300 text-white shadow-lg shadow-yellow-500/25'
+                        : 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white hover:shadow-lg hover:shadow-yellow-500/20'
                       : selectedLayout === layout.id
-                        ? 'bg-slate-800 border-2 border-blue-500'
-                        : 'bg-slate-700 hover:bg-slate-800'
+                        ? 'bg-slate-800 border-2 border-blue-400 shadow-lg shadow-blue-500/25'
+                        : 'bg-slate-700 hover:bg-slate-600 border border-slate-500/30 hover:border-slate-400/50'
                   }`}
                   title={layout.name}
                 >
@@ -1249,17 +1148,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                 </button>
               ))}
             </div>
+
+            {/* Elegant Separator */}
+            <div className="w-px h-8 bg-gradient-to-b from-transparent via-slate-400/40 to-transparent"></div>
+
+            {/* Caption Options */}
+            <div className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto">
+              <span className="text-xs font-medium text-slate-300 uppercase tracking-wider flex-shrink-0">Captions</span>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto">
+                {captionOptions.map((caption) => (
+                  <button
+                    key={caption.id}
+                    onClick={() => setSelectedCaption(caption.id)}
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 flex-shrink-0 ${
+                      selectedCaption === caption.id
+                        ? 'bg-slate-800 border-2 border-blue-400 shadow-lg shadow-blue-500/25'
+                        : 'bg-slate-700 hover:bg-slate-600 border border-slate-500/30 hover:border-slate-400/50 hover:shadow-md'
+                    }`}
+                    title={caption.name}
+                  >
+                    {renderCaptionIcon(caption.icon)}
+                  </button>
+                ))}
+              </div>
+            </div>
             
-            {/* Publish Button */}
+            {/* Sleek Process Button */}
             {onPublishAllScenes && (
               <Button
                 onClick={() => onPublishAllScenes()}
                 size="sm"
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold flex items-center gap-2 px-3 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex-shrink-0 whitespace-nowrap"
-                title="Publish Video"
+                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-semibold flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-lg hover:shadow-xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105 flex-shrink-0 whitespace-nowrap border border-emerald-400/20"
+                title="Process Video"
               >
                 <Upload className="w-4 h-4" />
-                <span className="text-sm">Publish</span>
+                <span className="text-sm font-medium">Process</span>
               </Button>
             )}
           </div>
@@ -1270,34 +1193,58 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </div>
       </div>
 
-      {/* Layout Selection Modal */}
+      {/* Layout and Caption Selection Modal */}
       <Dialog open={showLayoutSelection} onOpenChange={setShowLayoutSelection}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Layout Options</DialogTitle>
+            <DialogTitle>Layout & Caption Options</DialogTitle>
           </DialogHeader>
-          <div className="bg-slate-600 rounded-lg p-2 flex items-center justify-center gap-1 w-full">
-            {layoutOptions.map((layout) => (
-              <button
-                key={layout.id}
-                onClick={() => {
-                  setSelectedLayout(layout.id);
-                  setShowLayoutSelection(false);
-                }}
-                className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
-                  layout.isAI 
-                    ? selectedLayout === layout.id
-                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-300 text-white'
-                      : 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white'
-                    : selectedLayout === layout.id
-                      ? 'bg-slate-800 border-2 border-blue-500'
-                      : 'bg-slate-700 hover:bg-slate-800'
-                }`}
-                title={layout.name}
-              >
-                {renderLayoutIcon(layout.icon)}
-              </button>
-            ))}
+          <div className="space-y-4">
+            {/* Layout Options */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Layouts</h3>
+              <div className="bg-slate-600 rounded-lg p-2 flex items-center justify-center gap-1 w-full">
+                {layoutOptions.map((layout) => (
+                  <button
+                    key={layout.id}
+                    onClick={() => setSelectedLayout(layout.id)}
+                    className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                      layout.isAI 
+                        ? selectedLayout === layout.id
+                          ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-300 text-white'
+                          : 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white'
+                        : selectedLayout === layout.id
+                          ? 'bg-slate-800 border-2 border-blue-500'
+                          : 'bg-slate-700 hover:bg-slate-800'
+                    }`}
+                    title={layout.name}
+                  >
+                    {renderLayoutIcon(layout.icon)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Caption Options */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Captions</h3>
+              <div className="bg-slate-600 rounded-lg p-2 flex items-center justify-center gap-1 w-full">
+                {captionOptions.map((caption) => (
+                  <button
+                    key={caption.id}
+                    onClick={() => setSelectedCaption(caption.id)}
+                    className={`w-8 h-6 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                      selectedCaption === caption.id
+                        ? 'bg-slate-800 border-2 border-blue-500'
+                        : 'bg-slate-700 hover:bg-slate-800'
+                    }`}
+                    title={caption.name}
+                  >
+                    {renderCaptionIcon(caption.icon)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -2260,7 +2207,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                       />
                     </div>
                     <div className="text-xs text-gray-400">
-                      Scene {selectedScene + 1} - Vertical Format
+                      Clip {selectedScene + 1} - Vertical Format
                     </div>
                   </div>
                 </div>

@@ -93,7 +93,7 @@ const ScenesListFinal = ({
           
           {/* Center - Scene Counter */}
           <div className="flex-1 flex justify-center">
-            <span className="text-sm text-slate-500">Scene {selectedScene + 1} of {scenes.length}</span>
+            <span className="text-sm text-slate-500">Clip {selectedScene + 1} of {scenes.length}</span>
           </div>
           
           {/* Right side - Navigation arrows */}
@@ -102,7 +102,7 @@ const ScenesListFinal = ({
               onClick={onPreviousScene}
               disabled={selectedScene === 0}
               className="p-1 hover:bg-slate-100 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Previous Scene"
+              title="Previous Clip"
             >
               <ChevronLeft className="w-4 h-4 text-slate-600" />
             </button>
@@ -110,7 +110,7 @@ const ScenesListFinal = ({
               onClick={onNextScene}
               disabled={selectedScene === scenes.length - 1}
               className="p-1 hover:bg-slate-100 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Next Scene"
+              title="Next Clip"
             >
               <ChevronRight className="w-4 h-4 text-slate-600" />
             </button>
@@ -133,7 +133,7 @@ const ScenesListFinal = ({
                 <div className="flex items-center justify-between w-full">
                   <img
                     src={getThumbnailForScene(index)}
-                    alt={`Scene ${index + 1}`}
+                    alt={`Clip ${index + 1}`}
                     className="w-40 h-28 object-cover rounded flex-shrink-0"
                   />
                   <span className="text-sm text-slate-500 font-medium ml-3 flex-shrink-0">{scene.duration}</span>

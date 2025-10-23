@@ -12,10 +12,10 @@ const PublishedFiles = () => {
   const [selectedFilter, setSelectedFilter] = useState('all-published');
 
   const filters = [
-    { id: 'all-published', label: 'All Published', count: 89 },
-    { id: 'slike-published', label: 'Slike Published', count: 34 },
-    { id: 'denmark-published', label: 'Denmark Published', count: 28 },
-    { id: 'youtube-published', label: 'YouTube Published', count: 27 },
+    { id: 'all-published', label: 'All Processed', count: 89 },
+    { id: 'slike-published', label: 'Slike Processed', count: 34 },
+    { id: 'denmark-published', label: 'Denmark Processed', count: 28 },
+    { id: 'youtube-published', label: 'YouTube Processed', count: 27 },
   ];
 
   const publishedFiles = [
@@ -25,7 +25,7 @@ const PublishedFiles = () => {
       duration: '12:34',
       owner: 'Sarah Johnson',
       created: '2 hours ago',
-      status: 'Published' as const,
+      status: 'Processed' as const,
       destinations: 'Slike'
     },
     {
@@ -34,7 +34,7 @@ const PublishedFiles = () => {
       duration: '8:45',
       owner: 'Mike Chen',
       created: '1 day ago',
-      status: 'Published' as const,
+      status: 'Processed' as const,
       destinations: 'YouTube'
     },
     {
@@ -52,7 +52,7 @@ const PublishedFiles = () => {
       duration: '6:12',
       owner: 'David Kim',
       created: '5 days ago',
-      status: 'Published' as const,
+      status: 'Processed' as const,
       destinations: 'Slike'
     },
     {
@@ -61,7 +61,7 @@ const PublishedFiles = () => {
       duration: '15:30',
       owner: 'Anna Park',
       created: '1 week ago',
-      status: 'Published' as const,
+      status: 'Processed' as const,
       destinations: 'YouTube'
     },
     {
@@ -79,7 +79,7 @@ const PublishedFiles = () => {
       duration: '9:45',
       owner: 'John Smith',
       created: '2 weeks ago',
-      status: 'Published' as const,
+      status: 'Processed' as const,
       destinations: 'Slike'
     },
     {
@@ -88,14 +88,14 @@ const PublishedFiles = () => {
       duration: '14:20',
       owner: 'Emma Davis',
       created: '2 weeks ago',
-      status: 'Published' as const,
+      status: 'Processed' as const,
       destinations: 'YouTube'
     },
   ];
 
-  const getStatusBadge = (status: 'Published' | 'Error') => {
+  const getStatusBadge = (status: 'Processed' | 'Error') => {
     const statusConfig = {
-      Published: { variant: 'secondary' as const, className: 'bg-green-100 text-green-800' },
+      Processed: { variant: 'secondary' as const, className: 'bg-green-100 text-green-800' },
       Error: { variant: 'destructive' as const, className: 'bg-red-100 text-red-800' }
     };
 
@@ -133,7 +133,7 @@ const PublishedFiles = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">Published Files</h1>
+                  <h1 className="text-2xl font-bold text-slate-900">Processed Files</h1>
                   <p className="text-slate-600 mt-1">Manage and organize your published content</p>
                 </div>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -177,7 +177,7 @@ const PublishedFiles = () => {
               </div>
             </div>
 
-            {/* Published Files Table */}
+            {/* Processed Files Table */}
             <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
               <Table>
                 <TableHeader>

@@ -13,7 +13,7 @@ const Sidebar = () => {
     { icon: Home, label: 'Dashboard', path: '/' },
     { icon: FolderOpen, label: 'Projects', path: '/projects' },
     { icon: FileText, label: 'Transcription', path: '/transcription' },
-    { icon: Globe, label: 'Published Files', path: '/published' },
+    { icon: Globe, label: 'Processed Files', path: '/published' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 

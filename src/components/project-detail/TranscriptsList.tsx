@@ -35,7 +35,7 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
   const getFullScript = () => {
     return scenes.map((scene, index) => {
       const transcript = updatedTranscripts?.[index] || scene.transcript || '';
-      return `Scene ${index + 1}:\n${transcript}`;
+      return `Clip ${index + 1}:\n${transcript}`;
     }).join('\n\n');
   };
 
@@ -106,14 +106,14 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
       {/* Header */}
         <div className="p-4 border-b border-slate-200 flex-shrink-0">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-slate-900">Transcript</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Transcript of clip {selectedScene + 1}</h3>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-hidden" data-transcript-container>
         <div className="p-4 h-full flex flex-col">
-          {/* Current Scene Transcript - Directly Editable */}
+          {/* Current Clip Transcript - Directly Editable */}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex-shrink-0">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-slate-700">Current Transcript:</h4>

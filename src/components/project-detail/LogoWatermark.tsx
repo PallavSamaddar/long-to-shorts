@@ -214,7 +214,7 @@ A
                 <span>👻 Invisible</span>
                 <span>🎯 Perfect</span>
                 <span>💪 Bold</span>
-              </div>
+              </div>dev 
             </div>
             <div className="grid grid-cols-3 gap-2">
               <Button
