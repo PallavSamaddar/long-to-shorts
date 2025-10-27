@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit3, Save, X, Plus, Expand } from 'lucide-react';
+import { Edit3, Save, X, Plus, Expand, ChevronLeft, ChevronRight } from 'lucide-react';
 import { scenes } from '@/data/projectDetailData';
 import { Button } from '@/components/ui/button';
 
@@ -9,9 +9,11 @@ interface TranscriptsListProps {
   updatedTranscripts?: { [key: number]: string };
   isCreatingClip?: boolean;
   onClipModeExit?: () => void;
+  onPreviousScene?: () => void;
+  onNextScene?: () => void;
 }
 
-const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTranscriptUpdate, updatedTranscripts, isCreatingClip = false, onClipModeExit }) => {
+const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTranscriptUpdate, updatedTranscripts, isCreatingClip = false, onClipModeExit, onPreviousScene, onNextScene }) => {
   const [transcriptText, setTranscriptText] = useState('');
   const [fullScriptText, setFullScriptText] = useState('');
   const [currentSceneHeight, setCurrentSceneHeight] = useState(150); // Default height for current scene
@@ -105,8 +107,32 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
     <div className="w-full bg-white border-r border-slate-200 flex flex-col h-full">
       {/* Header */}
         <div className="p-4 border-b border-slate-200 flex-shrink-0">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-slate-900">Transcript of clip {selectedScene + 1}</h3>
+        <div className="flex items-center justify-between">
+          <div className="w-10 flex justify-start">
+            <Button
+              onClick={onPreviousScene}
+              disabled={selectedScene === 0}
+              variant="ghost"
+              size="sm"
+              className="p-2 h-8 w-8 text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <h3 className="text-lg font-semibold text-slate-900 text-center flex-1 px-8">Transcript of clip {selectedScene + 1}</h3>
+          
+          <div className="w-10 flex justify-end">
+            <Button
+              onClick={onNextScene}
+              disabled={selectedScene === scenes.length - 1}
+              variant="ghost"
+              size="sm"
+              className="p-2 h-8 w-8 text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

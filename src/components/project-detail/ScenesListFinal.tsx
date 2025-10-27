@@ -24,6 +24,8 @@ interface ScenesListFinalProps {
   isLeftPanelCollapsed?: boolean;
   onToggleLeftPanel?: () => void;
   projectStatus?: 'In queue' | 'Published';
+  clipGenerationStatus?: { [key: number]: 'In queue' | 'Published' | 'Generating Both' | 'Generating Horizontal' | 'Generating Vertical' };
+  generatedVideos?: { [key: number]: { horizontal?: string; vertical?: string; generationType?: 'both' | 'horizontal' | 'vertical' } };
   clips?: Clip[];
   onClipCreate?: (clip: Omit<Clip, 'id' | 'createdAt'>) => void;
   onClipUpdate?: (clipId: string, updates: Partial<Clip>) => void;
@@ -37,12 +39,14 @@ interface ScenesListFinalProps {
 const ScenesListFinal = ({ 
   selectedScene, 
   onSceneSelect, 
-  onPreviousScene, 
+  onPreviousScene,
   onNextScene, 
   updatedThumbnails, 
   isLeftPanelCollapsed, 
   onToggleLeftPanel, 
   projectStatus = 'In queue',
+  clipGenerationStatus = {},
+  generatedVideos = {},
   clips = [],
   onClipCreate,
   onClipUpdate,
@@ -139,21 +143,52 @@ const ScenesListFinal = ({
                   <span className="text-sm text-slate-500 font-medium ml-3 flex-shrink-0">{scene.duration}</span>
                 </div>
                 <div className="flex justify-center">
-                  <Badge 
-                    variant="secondary" 
-                    className={`flex items-center gap-1 text-xs ${
-                      projectStatus === 'Published' 
-                        ? 'bg-green-100 text-green-800 border-green-200' 
-                        : 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                    }`}
-                  >
-                    {projectStatus === 'Published' ? (
-                      <CheckCircle className="w-3 h-3" />
-                    ) : (
-                      <Clock className="w-3 h-3" />
-                    )}
-                    {projectStatus}
-                  </Badge>
+                  {(() => {
+                    const clipStatus = clipGenerationStatus[index] || 'In queue';
+                    const generatedVideo = generatedVideos?.[index];
+                    
+                    // Determine what was actually generated
+                    const getGeneratedText = () => {
+                      if (clipStatus !== 'Published' || !generatedVideo) {
+                        return clipStatus;
+                      }
+                      
+                      const hasHorizontal = !!generatedVideo.horizontal;
+                      const hasVertical = !!generatedVideo.vertical;
+                      
+                      if (hasHorizontal && hasVertical) {
+                        return 'Generated Both';
+                      } else if (hasHorizontal) {
+                        return 'Generated Horizontal';
+                      } else if (hasVertical) {
+                        return 'Generated Vertical';
+                      } else {
+                        return 'Generated';
+                      }
+                    };
+                    
+                    return (
+                      <Badge 
+                        variant="secondary" 
+                        className={`flex items-center gap-1 text-xs ${
+                          clipStatus === 'Published' 
+                            ? 'bg-green-100 text-green-800 border-green-200' 
+                            : clipStatus?.startsWith('Generating')
+                              ? 'bg-blue-100 text-blue-800 border-blue-200 animate-pulse'
+                              : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                        }`}
+                      >
+                        {clipStatus === 'Published' ? (
+                          <CheckCircle className="w-3 h-3" />
+                        ) : clipStatus?.startsWith('Generating') ? (
+                          <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <Clock className="w-3 h-3" />
+                        )}
+                        {getGeneratedText()}
+                      </Badge>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

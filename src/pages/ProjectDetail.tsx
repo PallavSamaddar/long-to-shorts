@@ -5,6 +5,7 @@ import ScenesListFinal from '@/components/project-detail/ScenesListFinal';
 import TranscriptsList from '@/components/project-detail/TranscriptsList';
 import VideoPlayer from '@/components/project-detail/VideoPlayer';
 import PublishSettingsDialog from '@/components/project-detail/PublishSettingsDialog';
+import GeneratedVideosDialog from '@/components/project-detail/GeneratedVideosDialog';
 import ClipsManager from '@/components/project-detail/ClipsManager';
 import { ResizablePanels } from '@/components/ui/resizable-panels';
 import { scenes } from '@/data/projectDetailData';
@@ -22,6 +23,8 @@ const ProjectDetail = () => {
     opacity: 50
   });
   const [projectStatus, setProjectStatus] = useState<'In queue' | 'Published'>('In queue');
+  const [clipGenerationStatus, setClipGenerationStatus] = useState<{ [key: number]: 'In queue' | 'Published' | 'Generating Both' | 'Generating Horizontal' | 'Generating Vertical' }>({});
+  const [generatedVideos, setGeneratedVideos] = useState<{ [key: number]: { horizontal?: string; vertical?: string; generationType?: 'both' | 'horizontal' | 'vertical' } }>({});
   const [clips, setClips] = useState<Array<{
     id: string;
     name: string;
@@ -33,6 +36,7 @@ const ProjectDetail = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isCreatingClip, setIsCreatingClip] = useState(false);
+  const [isGeneratedVideosDialogOpen, setIsGeneratedVideosDialogOpen] = useState(false);
 
   const handleSceneSelect = (index: number) => {
     setSelectedScene(index);
@@ -78,6 +82,154 @@ const ProjectDetail = () => {
 
   const handlePublishAllScenes = () => {
     setIsPublishDialogOpen(true);
+  };
+
+  // Generation handlers
+  const handleGenerateBoth = () => {
+    console.log(`🎬 Starting generation of both horizontal and vertical videos for clip ${selectedScene + 1}`);
+    setClipGenerationStatus(prev => ({
+      ...prev,
+      [selectedScene]: 'Generating Both'
+    }));
+    // TODO: Add actual generation logic here
+    // Simulate generation completion after some time
+    setTimeout(() => {
+      // Use real video URLs for testing (in real app, these would come from your API)
+      const testVideos = [
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'
+      ];
+      
+      const horizontalVideo = testVideos[selectedScene % testVideos.length];
+      const verticalVideo = testVideos[(selectedScene + 1) % testVideos.length];
+      
+      setGeneratedVideos(prev => {
+        const newData = {
+          horizontal: horizontalVideo,
+          vertical: verticalVideo
+        };
+        
+        // Determine generationType based on available formats
+        const hasHorizontal = !!newData.horizontal;
+        const hasVertical = !!newData.vertical;
+        
+        return {
+          ...prev,
+          [selectedScene]: {
+            ...newData,
+            generationType: hasHorizontal && hasVertical ? 'both' : hasHorizontal ? 'horizontal' : 'vertical'
+          }
+        };
+      });
+      
+      setClipGenerationStatus(prev => ({
+        ...prev,
+        [selectedScene]: 'Published'
+      }));
+      
+      console.log(`✅ Generated both videos for clip ${selectedScene + 1}`);
+    }, 5000); // 5 seconds for demo
+  };
+
+  const handleGenerateHorizontal = () => {
+    console.log(`🖥️ Starting generation of horizontal video for clip ${selectedScene + 1}`);
+    setClipGenerationStatus(prev => ({
+      ...prev,
+      [selectedScene]: 'Generating Horizontal'
+    }));
+    // TODO: Add actual generation logic here
+    // Simulate generation completion after some time
+    setTimeout(() => {
+      // Use real video URLs for testing (in real app, these would come from your API)
+      const testVideos = [
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'
+      ];
+      
+      const mockHorizontalVideo = testVideos[selectedScene % testVideos.length];
+      
+      setGeneratedVideos(prev => {
+        const existingData = prev[selectedScene] || {};
+        const newData = {
+          ...existingData,
+          horizontal: mockHorizontalVideo
+        };
+        
+        // Determine generationType based on available formats
+        const hasHorizontal = !!newData.horizontal;
+        const hasVertical = !!newData.vertical;
+        
+        return {
+          ...prev,
+          [selectedScene]: {
+            ...newData,
+            generationType: hasHorizontal && hasVertical ? 'both' : hasHorizontal ? 'horizontal' : 'vertical'
+          }
+        };
+      });
+      
+      setClipGenerationStatus(prev => ({
+        ...prev,
+        [selectedScene]: 'Published'
+      }));
+      
+      console.log(`✅ Generated horizontal video for clip ${selectedScene + 1}`);
+    }, 3000); // 3 seconds for demo
+  };
+
+  const handleGenerateVertical = () => {
+    console.log(`📱 Starting generation of vertical video for clip ${selectedScene + 1}`);
+    setClipGenerationStatus(prev => ({
+      ...prev,
+      [selectedScene]: 'Generating Vertical'
+    }));
+    // TODO: Add actual generation logic here
+    // Simulate generation completion after some time
+    setTimeout(() => {
+      // Use real video URLs for testing (in real app, these would come from your API)
+      const testVideos = [
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'
+      ];
+      
+      const mockVerticalVideo = testVideos[(selectedScene + 2) % testVideos.length];
+      
+      setGeneratedVideos(prev => {
+        const existingData = prev[selectedScene] || {};
+        const newData = {
+          ...existingData,
+          vertical: mockVerticalVideo
+        };
+        
+        // Determine generationType based on available formats
+        const hasHorizontal = !!newData.horizontal;
+        const hasVertical = !!newData.vertical;
+        
+        return {
+          ...prev,
+          [selectedScene]: {
+            ...newData,
+            generationType: hasHorizontal && hasVertical ? 'both' : hasHorizontal ? 'horizontal' : 'vertical'
+          }
+        };
+      });
+      
+      setClipGenerationStatus(prev => ({
+        ...prev,
+        [selectedScene]: 'Published'
+      }));
+      
+      console.log(`✅ Generated vertical video for clip ${selectedScene + 1}`);
+    }, 3000); // 3 seconds for demo
   };
 
   const handlePublishComplete = () => {
@@ -149,7 +301,11 @@ const ProjectDetail = () => {
 
   return (
     <div className="h-screen bg-slate-50 flex flex-col w-full overflow-hidden">
-      <ProjectDetailHeader />
+      <ProjectDetailHeader 
+        generatedVideos={generatedVideos}
+        totalClips={scenes.length}
+        onGeneratedVideosClick={() => setIsGeneratedVideosDialogOpen(true)}
+      />
 
       <main className="flex-1 flex overflow-hidden">
         <ResizablePanels>
@@ -160,6 +316,8 @@ const ProjectDetail = () => {
             onNextScene={handleNextScene}
             updatedThumbnails={updatedThumbnails}
             projectStatus={projectStatus}
+            clipGenerationStatus={clipGenerationStatus}
+            generatedVideos={generatedVideos}
             clips={clips}
             onClipCreate={handleClipCreate}
             onClipUpdate={handleClipUpdate}
@@ -176,6 +334,8 @@ const ProjectDetail = () => {
             updatedTranscripts={updatedTranscripts}
             isCreatingClip={isCreatingClip}
             onClipModeExit={() => setIsCreatingClip(false)}
+            onPreviousScene={handlePreviousScene}
+            onNextScene={handleNextScene}
           />
           
           <VideoPlayer 
@@ -185,6 +345,11 @@ const ProjectDetail = () => {
             onPublishAllScenes={handlePublishAllScenes}
             updatedThumbnails={updatedThumbnails}
             onTimeUpdate={handleVideoTimeUpdate}
+            onGenerateBoth={handleGenerateBoth}
+            onGenerateHorizontal={handleGenerateHorizontal}
+            onGenerateVertical={handleGenerateVertical}
+            generatedVideos={generatedVideos}
+            clipGenerationStatus={clipGenerationStatus}
           />
         </ResizablePanels>
       </main>
@@ -197,6 +362,13 @@ const ProjectDetail = () => {
         currentSceneIndex={selectedScene}
         totalScenes={scenes.length}
         availableThumbnails={updatedThumbnails}
+      />
+
+      <GeneratedVideosDialog
+        isOpen={isGeneratedVideosDialogOpen}
+        onClose={() => setIsGeneratedVideosDialogOpen(false)}
+        generatedVideos={generatedVideos}
+        updatedThumbnails={updatedThumbnails}
       />
     </div>
   );

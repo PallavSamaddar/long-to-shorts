@@ -3,9 +3,10 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, Info, Upload, Eye, X, Maximize2, Minimize2, Sparkles } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, Info, Upload, Eye, X, Maximize2, Minimize2, Sparkles, Monitor, Smartphone, Layers, ChevronDown } from 'lucide-react';
 import { scenes } from '@/data/projectDetailData';
 import LogoWatermark from './LogoWatermark';
 
@@ -16,9 +17,14 @@ interface VideoPlayerProps {
   onPublishAllScenes?: () => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   updatedThumbnails?: { [key: number]: string };
+  onGenerateBoth?: () => void;
+  onGenerateHorizontal?: () => void;
+  onGenerateVertical?: () => void;
+  generatedVideos?: { [key: number]: { horizontal?: string; vertical?: string; generationType?: 'both' | 'horizontal' | 'vertical' } };
+  clipGenerationStatus?: { [key: number]: 'In queue' | 'Published' | 'Generating Both' | 'Generating Horizontal' | 'Generating Vertical' };
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpdate, onLogoUpdate, onPublishAllScenes, onTimeUpdate, updatedThumbnails }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpdate, onLogoUpdate, onPublishAllScenes, onTimeUpdate, updatedThumbnails, onGenerateBoth, onGenerateHorizontal, onGenerateVertical, generatedVideos, clipGenerationStatus }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [thumbnailIsPlaying, setThumbnailIsPlaying] = useState(false);
@@ -50,7 +56,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [videoViewMode, setVideoViewMode] = useState<'landscape' | 'portrait'>('landscape');
   const [selectedLayout, setSelectedLayout] = useState<number>(2); // Default to Split Horizontal layout
-  const [selectedCaption, setSelectedCaption] = useState<string>('none'); // Default to no captions
+  const [selectedCaption, setSelectedCaption] = useState<string>('none');
+  
+  // Generation progress states
+  const [generationProgress, setGenerationProgress] = useState<{
+    both: { isGenerating: boolean; progress: number; isCompleted: boolean };
+    horizontal: { isGenerating: boolean; progress: number; isCompleted: boolean };
+    vertical: { isGenerating: boolean; progress: number; isCompleted: boolean };
+  }>({
+    both: { isGenerating: false, progress: 0, isCompleted: false },
+    horizontal: { isGenerating: false, progress: 0, isCompleted: false },
+    vertical: { isGenerating: false, progress: 0, isCompleted: false }
+  }); // Default to no captions
   const [showLayoutSelection, setShowLayoutSelection] = useState(false);
   const [selectedVerticalLayout, setSelectedVerticalLayout] = useState<string>('focused-on-one');
   const [selectedCaptionStyle, setSelectedCaptionStyle] = useState<string>('none');
@@ -140,7 +157,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
       
       case 'neon':
         return (
-          <div className={`${iconClass} bg-green-300/40 rounded-sm flex items-center justify-center`}>
+          <div className={`${iconClass} rounded-sm flex items-center justify-center`}>
             <div className="w-1.5 h-0.5 bg-green-500 rounded-sm shadow-sm"></div>
           </div>
         );
@@ -159,15 +176,75 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
 
   // Get current scene data
   const currentScene = scenes[selectedScene];
+  
+  // Helper function to determine which video to show
+  const getCurrentVideoUrl = () => {
+    const clipStatus = clipGenerationStatus?.[selectedScene];
+    const generatedVideo = generatedVideos?.[selectedScene];
+    
+    // If clip is published (generated), show the generated video based on current view mode
+    if (clipStatus === 'Published' && generatedVideo) {
+      if (videoViewMode === 'portrait' && generatedVideo.vertical) {
+        return generatedVideo.vertical;
+      } else if (videoViewMode === 'landscape' && generatedVideo.horizontal) {
+        return generatedVideo.horizontal;
+      }
+      // Fallback: if requested format not available, show what we have
+      return generatedVideo.horizontal || generatedVideo.vertical || currentScene?.videoUrl;
+    }
+    
+    // Otherwise, show original preview video
+    return currentScene?.videoUrl;
+  };
+  
+  // Helper function to check if we're viewing a generated video
+  const isViewingGeneratedVideo = () => {
+    const clipStatus = clipGenerationStatus?.[selectedScene];
+    const generatedVideo = generatedVideos?.[selectedScene];
+    return clipStatus === 'Published' && generatedVideo && getCurrentVideoUrl() !== currentScene?.videoUrl;
+  };
+
+  // Helper function to simulate progress
+  const simulateProgress = (type: 'both' | 'horizontal' | 'vertical', duration: number) => {
+    const interval = 100; // Update every 100ms
+    const steps = duration / interval;
+    const increment = 100 / steps;
+    let currentProgress = 0;
+
+    setGenerationProgress(prev => ({
+      ...prev,
+      [type]: { isGenerating: true, progress: 0, isCompleted: false }
+    }));
+
+    const progressInterval = setInterval(() => {
+      currentProgress += increment;
+      
+      if (currentProgress >= 100) {
+        setGenerationProgress(prev => ({
+          ...prev,
+          [type]: { isGenerating: false, progress: 100, isCompleted: true }
+        }));
+        clearInterval(progressInterval);
+      } else {
+        setGenerationProgress(prev => ({
+          ...prev,
+          [type]: { ...prev[type], progress: currentProgress }
+        }));
+      }
+    }, interval);
+
+    return progressInterval;
+  };
 
   // Force video to load when component mounts or scene changes
   useEffect(() => {
     setMainVideoLoaded(false);
     if (videoRef.current) {
-      console.log('🔄 Forcing video reload for scene:', selectedScene, currentScene?.videoUrl);
+      const videoUrl = getCurrentVideoUrl();
+      console.log('🔄 Forcing video reload for scene:', selectedScene, videoUrl);
       videoRef.current.load();
     }
-  }, [selectedScene, currentScene?.videoUrl]);
+  }, [selectedScene, currentScene?.videoUrl, generatedVideos, clipGenerationStatus, videoViewMode]);
 
   // Convert duration string to seconds
   const durationToSeconds = (durationStr: string) => {
@@ -185,13 +262,50 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
     setCustomThumbnail(null);
   }, [selectedScene]);
 
+  // Reset generation progress when scene changes or when generation completes
+  useEffect(() => {
+    const clipStatus = clipGenerationStatus?.[selectedScene];
+    const generatedVideo = generatedVideos?.[selectedScene];
+    
+    if (clipStatus === 'Published' && generatedVideo) {
+      // Mark ONLY the specific button as completed based on what was actually generated
+      setGenerationProgress(prev => ({
+        both: { 
+          ...prev.both, 
+          isCompleted: generatedVideo.generationType === 'both',
+          isGenerating: false,
+          progress: generatedVideo.generationType === 'both' ? 100 : prev.both.progress
+        },
+        horizontal: { 
+          ...prev.horizontal, 
+          isCompleted: generatedVideo.generationType === 'horizontal',
+          isGenerating: false,
+          progress: generatedVideo.generationType === 'horizontal' ? 100 : prev.horizontal.progress
+        },
+        vertical: { 
+          ...prev.vertical, 
+          isCompleted: generatedVideo.generationType === 'vertical',
+          isGenerating: false,
+          progress: generatedVideo.generationType === 'vertical' ? 100 : prev.vertical.progress
+        }
+      }));
+    } else {
+      // Reset all progress when switching to a scene that hasn't been generated
+      setGenerationProgress({
+        both: { isGenerating: false, progress: 0, isCompleted: false },
+        horizontal: { isGenerating: false, progress: 0, isCompleted: false },
+        vertical: { isGenerating: false, progress: 0, isCompleted: false }
+      });
+    }
+  }, [selectedScene, clipGenerationStatus, generatedVideos]);
+
   // Video event handlers setup
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Load the video source
-    video.src = currentScene.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+    // Load the video source (use generated video if available, otherwise original)
+    video.src = getCurrentVideoUrl() || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
     video.load();
 
     const handleLoadedMetadata = () => {
@@ -839,13 +953,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         </div>
       </div>
 
-      {/* Disclaimer */}
-      <div className="flex-shrink-0 min-h-0 mb-2">
-        <p className="text-xs text-amber-600 text-center">
-          ⚠️ This is a tentative preview — final output will differ.
-        </p>
-      </div>
-
       {/* Video Player */}
       <div className="flex flex-col min-h-0 w-full" style={{ minWidth: '500px' }}>
         {/* Main Video Container */}
@@ -932,8 +1039,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
                         size="sm"
                         className={`font-semibold flex items-center justify-center w-10 h-10 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 ${
                           showCaptureSuccess 
-                            ? 'bg-green-600 text-white' 
-                            : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
+                            ? 'bg-gray-600 text-white' 
+                            : 'bg-gray-600 hover:bg-gray-700 text-white'
                         }`}
                       >
                         {showCaptureSuccess ? (
@@ -1124,16 +1231,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
         )}
 
         {/* Sleek Layout and Caption Selection Bar */}
-        <div className="mt-3 flex-shrink-0 min-h-0">
-          <div className="bg-gradient-to-r from-slate-700 to-slate-600 rounded-xl p-4 flex items-center justify-between gap-4 w-full min-w-0 shadow-lg border border-slate-500/20 backdrop-blur-sm">
+        <div className="mt-2 flex-shrink-0 min-h-0">
+          <div className="bg-gradient-to-r from-slate-800/95 to-slate-700/95 rounded-lg px-3 py-2.5 flex items-center justify-between gap-3 w-full min-w-0 shadow-xl border border-slate-600/30 backdrop-blur-md">
             {/* Layout Options */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">Layout</span>
+            <div className="flex items-center gap-1 flex-shrink-0">
               {layoutOptions.map((layout) => (
                 <button
                   key={layout.id}
                   onClick={() => setSelectedLayout(layout.id)}
-                  className={`w-9 h-7 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-105 ${
+                  className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 hover:scale-105 ${
                     layout.isAI 
                       ? selectedLayout === layout.id
                         ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-300 text-white shadow-lg shadow-yellow-500/25'
@@ -1150,46 +1256,106 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ selectedScene, onThumbnailUpd
             </div>
 
             {/* Elegant Separator */}
-            <div className="w-px h-8 bg-gradient-to-b from-transparent via-slate-400/40 to-transparent"></div>
+            <div className="w-px h-5 bg-gradient-to-b from-transparent via-slate-400/50 to-transparent"></div>
 
             {/* Caption Options */}
-            <div className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto">
-              <span className="text-xs font-medium text-slate-300 uppercase tracking-wider flex-shrink-0">Captions</span>
-              <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto">
-                {captionOptions.map((caption) => (
-                  <button
-                    key={caption.id}
-                    onClick={() => setSelectedCaption(caption.id)}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 flex-shrink-0 ${
-                      selectedCaption === caption.id
-                        ? 'bg-slate-800 border-2 border-blue-400 shadow-lg shadow-blue-500/25'
-                        : 'bg-slate-700 hover:bg-slate-600 border border-slate-500/30 hover:border-slate-400/50 hover:shadow-md'
-                    }`}
-                    title={caption.name}
-                  >
-                    {renderCaptionIcon(caption.icon)}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto">
+              {captionOptions.map((caption) => (
+                <button
+                  key={caption.id}
+                  onClick={() => setSelectedCaption(caption.id)}
+                  className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 hover:scale-105 flex-shrink-0 ${
+                    selectedCaption === caption.id
+                      ? 'bg-slate-800 border-2 border-blue-400 shadow-lg shadow-blue-500/25'
+                      : 'bg-slate-700 hover:bg-slate-600 border border-slate-500/30 hover:border-slate-400/50 hover:shadow-md'
+                  }`}
+                  title={caption.name}
+                >
+                  {renderCaptionIcon(caption.icon)}
+                </button>
+              ))}
             </div>
             
-            {/* Sleek Process Button */}
+            {/* Preview Warning */}
+            <div className="flex items-center flex-shrink-0">
+              <span className="text-xs opacity-60 text-amber-400">
+                This is a tentative preview, actual video will vary
+              </span>
+            </div>
+
+            {/* Video Generation CTAs */}
             {onPublishAllScenes && (
-              <Button
-                onClick={() => onPublishAllScenes()}
-                size="sm"
-                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-semibold flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-lg hover:shadow-xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105 flex-shrink-0 whitespace-nowrap border border-emerald-400/20"
-                title="Process Video"
-              >
-                <Upload className="w-4 h-4" />
-                <span className="text-sm font-medium">Process</span>
-              </Button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold flex items-center gap-2 px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Generate</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        console.log('📱 Generate Vertical Video clicked');
+                        simulateProgress('vertical', 3000);
+                        onGenerateVertical?.();
+                      }}
+                      disabled={generationProgress.vertical.isGenerating}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-center w-8 h-8 bg-orange-100 rounded-lg">
+                        <Smartphone className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Vertical Video</span>
+                        <span className="text-sm text-gray-500">9:16 aspect ratio</span>
+                      </div>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem
+                      onClick={() => {
+                        console.log('🖥️ Generate Horizontal Video clicked');
+                        simulateProgress('horizontal', 3000);
+                        onGenerateHorizontal?.();
+                      }}
+                      disabled={generationProgress.horizontal.isGenerating}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+                        <Monitor className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Horizontal Video</span>
+                        <span className="text-sm text-gray-500">16:9 aspect ratio</span>
+                      </div>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem
+                      onClick={() => {
+                        console.log('🎬 Generate Both Videos clicked');
+                        simulateProgress('both', 5000);
+                        onGenerateBoth?.();
+                      }}
+                      disabled={generationProgress.both.isGenerating}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
+                        <Layers className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Both Formats</span>
+                        <span className="text-sm text-gray-500">Both 16:9 and 9:16</span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
           </div>
-          
-
-
-
         </div>
       </div>
 
