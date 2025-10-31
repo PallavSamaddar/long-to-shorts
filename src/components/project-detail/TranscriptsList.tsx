@@ -19,9 +19,10 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
   const [currentSceneHeight, setCurrentSceneHeight] = useState(150); // Default height for current scene
   const [isResizing, setIsResizing] = useState(false);
 
-  // Get current scene's transcript (prioritize updated transcript over original)
+  // Get current scene's transcript and summary (prioritize updated transcript over original)
   const currentScene = scenes[selectedScene];
   const currentTranscript = updatedTranscripts?.[selectedScene] || currentScene?.transcript || '';
+  const currentSummary = currentScene?.summary || '';
 
   // Initialize transcript text and full script when component mounts or scene changes
   React.useEffect(() => {
@@ -134,6 +135,15 @@ const TranscriptsList: React.FC<TranscriptsListProps> = ({ selectedScene, onTran
             </Button>
           </div>
         </div>
+        
+        {/* Summary Section */}
+        {currentSummary && (
+          <div className="mt-1 px-3 pb-1">
+            <p className="text-sm text-slate-600 italic leading-tight">
+              {currentSummary}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Content */}
